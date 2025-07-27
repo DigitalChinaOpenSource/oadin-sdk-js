@@ -1,72 +1,66 @@
 # OadinLib
 
-> A helper library for interacting with **Oadin** (the Baize model framework).
-
-[English] | [简体中文](./README_zhCN.md)
+[English](./README.md) | [简体中文]
 
 ---
 
-## ✨ Features
-- Check whether the **Oadin** service is available
-- Check & download **oadin.exe**
-- Start Oadin service
-- Full helpers to: list/create/update services, models, and providers
-- Import / export configuration
-- Chat / Text generation (streaming & non‑streaming)
-- Text‑to‑Image
+## ✨ 功能
+- 检查 **Oadin** 服务是否存在
+- 检查 / 下载 **oadin.exe**
+- 启动 Oadin 服务
+- 服务 / 模型 / 服务提供商的完整管理接口
+- 导入 / 导出配置文件
+- Chat / 文本生成（支持流式 & 非流式）
+- 文生图
 
-## 🚀 Install
+## 🚀 安装
 ```bash
-# from npm registry
-npm install oadin-lib
-
-# or from a local tarball
 npm install oadin-lib-1.0.0.tgz
 ```
 
-## 🧭 Usage
+## 🧭 使用方法
 
-### 1) Import
+### 1) 引入
 ```js
 const OadinLib = require('oadin-lib');
-  const oadin = new OadinLib();
+const oadin = new OadinLib();
 ```
 
-### 2) Service availability
+### 2) 检查 Oadin 服务是否存在
 ```js
 oadin.isOadinAvailable().then((result) => {
   console.log(result);
 });
 ```
 
-### 3) Check whether `oadin.exe` exists
+### 3) 检查 oadin.exe 是否已下载
 ```js
 const existed = oadin.isOadinExisted();
-console.log(existed);
+  console.log(existed);
 ```
 
-### 4) Download `oadin.exe`
+### 4) 下载 oadin.exe
 ```js
 oadin.downloadOadin().then((result) => {
   console.log(result);
 });
 ```
 
-### 5) Start Oadin service
+### 5) 启动 Oadin 服务
 ```js
 oadin.startOadin().then((result) => {
   console.log(result);
 });
 ```
 
-### 6) List services
+### 6) 查看当前服务
 ```js
 oadin.getServices().then((result) => {
   console.log(result);
 });
 ```
 
-### 7) Create a new service
+### 7) 创建新服务
 ```js
 const data = {
   service_name: "chat/embed/generate/text-to-image",
@@ -76,70 +70,70 @@ const data = {
   provider_name: "local_ollama_chat/remote_openai_chat/...",
   auth_type: "none/apikey",
   auth_key: "your_api_key",
-}; // Required: service_name, service_source, hybrid_policy, flavor_name, provider_name
+}; // 必填: service_name, service_source, hybrid_policy, flavor_name, provider_name
 
 oadin.installService(data).then((result) => {
   console.log(result);
 });
 ```
 
-### 8) Update a service
+### 8) 更新服务
 ```js
 const data = {
   service_name: "chat/embed/generate/text-to-image",
   hybrid_policy: "default/always_local/always_remote",
   remote_provider: "",
   local_provider: ""
-}; // Required: service_name
+}; // 必填: service_name
 
 oadin.updateService(data).then((result) => {
   console.log(result);
 });
 ```
 
-### 9) List models
+### 9) 查看模型
 ```js
 oadin.getModels().then((result) => {
   console.log(result);
 });
 ```
 
-### 10) Install a model
+### 10) 安装模型
 ```js
 const data = {
   model_name: "llama2",
   service_name: "chat/embed/generate/text-to-image",
   service_source: "remote/local",
   provider_name: "local_ollama_chat/remote_openai_chat/...",
-}; // Required: model_name, service_name, service_source
+}; // 必填: model_name, service_name, service_source
 
 oadin.installModel(data).then((result) => {
   console.log(result);
 });
 ```
 
-### 11) Uninstall a model
+### 11) 卸载模型
 ```js
 const data = {
   model_name: "llama2",
   service_name: "chat/embed/generate/text-to-image",
   service_source: "remote/local",
   provider_name: "local_ollama_chat/remote_openai_chat/...",
-}; // Required: model_name, service_name, service_source
+}; // 必填: model_name, service_name, service_source
 
 oadin.deleteModel(data).then((result) => {
   console.log(result);
 });
 ```
 
-### 12) List service providers
+### 12) 查看服务提供商
 ```js
 oadin.getServiceProviders().then((result) => {
   console.log(result);
 });
 ```
 
-### 13) Add a service provider
+### 13) 新增服务提供商
 ```js
 const data = {
   service_name: "chat/embed/generate/text-to-image",
@@ -154,14 +148,14 @@ const data = {
   extra_headers: {},
   extra_json_body: {},
   properties: {}
-}; // Required: service_name, service_source, flavor_name, provider_name
+}; // 必填: service_name, service_source, flavor_name, provider_name
 
 oadin.installServiceProvider(data).then((result) => {
   console.log(result);
 });
 ```
 
-### 14) Update a service provider
+### 14) 更新服务提供商
 ```js
 const data = {
   service_name: "chat/embed/generate/text-to-image",
@@ -176,14 +170,14 @@ const data = {
   extra_headers: {},
   extra_json_body: {},
   properties: {}
-}; // Required: service_name, service_source, flavor_name, provider_name
+}; // 必填: service_name, service_source, flavor_name, provider_name
 
 oadin.updateServiceProvider(data).then((result) => {
   console.log(result);
 });
 ```
 
-### 15) Delete a service provider
+### 15) 删除服务提供商
 ```js
 const data = {
   provider_name: ""
@@ -194,44 +188,44 @@ oadin.deleteServiceProvider(data).then((result) => {
 });
 ```
 
-### 16) Import a config file
+### 16) 导入配置文件
 ```js
 oadin.importConfig("path/to/.oadin").then((result) => {
   console.log(result);
 });
 ```
 
-### 17) Export a config file
+### 17) 导出配置文件
 ```js
 const data = {
   service_name: "chat/embed/generate/text-to-image"
 };
 
-oadin.exportConfig(data).then((result) => { // omit data to export everything
+oadin.exportConfig(data).then((result) => { // 不填 data 则导出全部
   console.log(result);
 });
 ```
 
-### 18) Get recommended models
+### 18) 获取推荐模型列表
 ```js
 oadin.getModelsRecommended().then((result) => {
   console.log(result);
 });
 ```
 
-### 19) Get supported models
+### 19) 获取支持模型列表
 ```js
 const data = {
   service_source: "remote/local",
-  flavor: "ollama/openai/..." // for local, defaults to ollama
-}; // Required: service_source, flavor
+  flavor: "ollama/openai/..." // local 则默认为 ollama
+}; // 必填: service_source, flavor
 
 oadin.getModelsSupported(data).then((result) => {
   console.log(result);
 });
 ```
 
-### 20) Chat (streaming)
+### 20) Chat（流式）
 ```js
 const data = {
   model: "deepseek-r1:7b",
@@ -259,7 +253,7 @@ oadin.chat(data).then((chatStream) => {
 });
 ```
 
-### 21) Chat (non‑streaming)
+### 21) Chat（非流式）
 ```js
 const data = {
   model: "deepseek-r1:7b",
@@ -279,7 +273,7 @@ oadin.chat(data).then((result) => {
 });
 ```
 
-### 22) Text generation (streaming)
+### 22) 生文（流式）
 ```js
 const data = {
   model: "deepseek-r1:7b",
@@ -299,7 +293,7 @@ oadin.generate(data).then((generateStream) => {
 });
 ```
 
-### 23) Text generation (non‑streaming)
+### 23) 生文（非流式）
 ```js
 const data = {
   model: "deepseek-r1:7b",
@@ -311,7 +305,7 @@ oadin.generate(data).then((result) => {
 });
 ```
 
-### 24) Text‑to‑Image
+### 24) 文生图
 ```js
 const data = {
   model: "wanx2.1-t2i-turbo",
@@ -323,5 +317,6 @@ oadin.textToImage(data).then((result) => {
 });
 ```
 
-## 📌 Notes
-- `oadin.getModelsAvailiable()` has been removed or renamed. Use **`getModels()`** instead.
+## 📌 说明
+- `oadin.getModelsAvailiable()` 方法已移除或被重命名，请使用 **`getModels()`**。
+
