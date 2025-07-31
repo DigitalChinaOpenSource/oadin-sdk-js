@@ -531,6 +531,7 @@ const chatRequest = {
     properties: {
         model: { type: "string" },
         stream: { type: "boolean" },
+        think: { type: "boolean" },
         messages: {
             type: "array",
             items: {
