@@ -90,7 +90,18 @@ async function requestWithSchema({ method, url, data, schema, instance }) {
     }
     return { code: 200, msg: res.message || null, data: res.data || res };
   } catch (error) {
-    return { code: 400, msg: error.response?.data?.message || error.message, data: null };
+    let msg = error.message;
+    if (error.response) {
+      // 兼容后端返回的各种结构
+      if (typeof error.response.data === 'string') {
+        msg = error.response.data;
+      } else if (error.response.data?.message) {
+        msg = error.response.data.message;
+      } else if (error.response.data) {
+        msg = JSON.stringify(error.response.data);
+      }
+    }
+    return { code: 400, msg, data: null };
   }
 }
 
