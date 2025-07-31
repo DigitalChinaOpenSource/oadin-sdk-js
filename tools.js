@@ -375,13 +375,13 @@ async function getOadinVersion(){
   }
 
   // 解析主版本号
-  const mainVersionMatch = fullStdout.match(/Oadin Version:\s*(v\d+\.\d+)/);
+  const mainVersionMatch = fullStdout.match(/OADIN Version:\s*(v\d+\.\d+)/);
   if (mainVersionMatch && mainVersionMatch[1]) {
     currentMainVersion = mainVersionMatch[1];
   }
 
   // 解析子版本号
-  const subVersionMatch = fullStdout.match(/Oadin SubVersion:\s*(\d+)/);
+  const subVersionMatch = fullStdout.match(/OADIN SubVersion:\s*(\d+)/);
   if (subVersionMatch && subVersionMatch[1]) {
     currentSubVersion = subVersionMatch[1];
   }
