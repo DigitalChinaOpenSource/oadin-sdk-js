@@ -1,11 +1,9 @@
-const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const winston = require('winston');
-const { MAIN_VERSION, SUB_VERSION, MAC_OADIN_PATH, OADIN_HEALTH, OADIN_ENGINE_PATH, } = require('./constants.js');
+const { MAC_OADIN_PATH, OADIN_HEALTH, OADIN_ENGINE_PATH, } = require('./constants.js');
 const axios = require('axios');
 const child_process = require('child_process');
-const { execFile } = require('child_process');
 
 
 async function isOadinAvailable(retries = 5, interval = 1000) {
@@ -317,88 +315,6 @@ function runInstallerByPlatform(installerPath) {
   return Promise.reject(new Error('不支持的平台')); // 不支持的平台则拒绝 Promise
 }
 
-async function getOadinVersion(){
-  const platform = getPlatform();
-  let currentMainVersion = null;
-  let currentSubVersion = null;
-  let fullStdout = ''; // 用于存储完整的stdout，以便后续解析
-
-  if (platform === 'win32') {
-    try {
-      const userDir = os.homedir();
-      const oadinDir = path.join(userDir, 'Oadin');
-      const oadinExecutable = path.join(oadinDir, 'oadin.exe');
-
-      const originalPath = process.env.PATH;
-      if (!process.env.PATH.includes(oadinDir)) {
-        process.env.PATH = `${process.env.PATH}${path.delimiter}${oadinDir}`;
-      }
-
-      const { stdout } = await new Promise((resolve, reject) => {
-        execFile(oadinExecutable, ['version'], { timeout: 5000 }, (error, stdout, stderr) => {
-          process.env.PATH = originalPath; // 恢复 PATH
-
-          if (error) {
-            logAndConsole('error', `执行 'oadin version' 命令失败: ${error.message}, stderr: ${stderr.toString()}`);
-            return reject(error);
-          }
-          resolve({ stdout: stdout.toString() });
-        });
-      });
-      fullStdout = stdout.toString();
-
-    } catch (err) {
-      logAndConsole('error', `获取 Windows Oadin 版本失败: ${err.message}`);
-      return false;
-    }
-  } else if (platform === 'darwin') {
-    try {
-      const oadinExecutable = MAC_OADIN_PATH; // 确保 MAC_OADIN_PATH 是正确的
-      const { stdout } = await new Promise((resolve, reject) => {
-        execFile(oadinExecutable, ['version'], { timeout: 5000 }, (error, stdout, stderr) => {
-          if (error) {
-            logAndConsole('error', `执行 'oadin version' 命令失败: ${error.message}, stderr: ${stderr.toString()}`);
-            return reject(error);
-          }
-          resolve({ stdout: stdout.toString() });
-        });
-      });
-      fullStdout = stdout.toString();
-
-    } catch (err) {
-      logAndConsole('error', `获取 macOS Oadin 版本失败: ${err.message}`);
-      return false;
-    }
-  } else {
-    logAndConsole('warn', `不支持的平台，无法获取 Oadin 版本。`);
-    return false;
-  }
-
-  // 解析主版本号
-  const mainVersionMatch = fullStdout.match(/Oadin Version:\s*(v\d+\.\d+)/);
-  if (mainVersionMatch && mainVersionMatch[1]) {
-    currentMainVersion = mainVersionMatch[1];
-  }
-
-  // 解析子版本号
-  const subVersionMatch = fullStdout.match(/Oadin SubVersion:\s*(\d+)/);
-  if (subVersionMatch && subVersionMatch[1]) {
-    currentSubVersion = subVersionMatch[1];
-  }
-
-  const latestMainVersion = MAIN_VERSION
-  const latestSubVersion = SUB_VERSION
-
-  // // 将版本字符串转换为可比较的数字（例如 v0.2 -> 0.2）
-  // const parseVersion = (versionStr) => parseFloat(versionStr.replace('v', ''));
-  // const currentMainNum = parseVersion(currentMainVersion);
-  // const latestMainNum = parseVersion(latestMainVersion);
-
-  const oadinVersion = currentMainVersion
-
-  return oadinVersion;
-}
-
 module.exports = {
   getPlatform,
   ensureDirWritable,
@@ -408,6 +324,5 @@ module.exports = {
   downloadFile,
   getOadinExecutablePath,
   runInstallerByPlatform,
-  isHealthy,
-  getOadinVersion
+  isHealthy
 };

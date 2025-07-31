@@ -13,33 +13,19 @@ const { promises: fsPromises } = require("fs");
 const schemas = require('./schema.js');
 const tools = require('./tools.js');
 const { logAndConsole, downloadFile, getOadinExecutablePath, runInstallerByPlatform, isHealthy } = require('./tools.js');
-const { createAxiosInstance, requestWithSchema } = require('./axiosInstance.js')
+const { instance, requestWithSchema } = require('./axiosInstance.js')
 const { MAIN_VERSION, SUB_VERSION, MAC_OADIN_PATH, PLATFORM_CONFIG, OADIN_HEALTH, OADIN_ENGINE_PATH, } = require('./constants.js');
 
 class Oadin {
-  constructor() {
-    this.version = null;
-    this.client = null;
-  }
-
-  async initClient(version) {
-    this.version = version;
-    this.client = createAxiosInstance(version);
-    logAndConsole('info', `Oadin axios 实例已初始化，版本: ${version}`);
-  }
-
-  async ensureClient() {
-    if (!this.client) {
-      const version = await tools.getOadinVersion();
-      if (!version) throw new Error('无法获取 Oadin 版本，无法初始化 axios 实例');
-      this.initClient(version);
-    }
+  constructor(version) {
+    this.version = version || "oadin/v0.2";
+    this.client = instance;
+    logAndConsole('info', `Oadin类初始化，版本: ${this.version}`);
   }
 
   async _requestWithSchema({ method, url, data, schema }) {
-    await this.ensureClient();
     logAndConsole('info', `请求API: ${method.toUpperCase()} ${url}`);
-    return await requestWithSchema({ method, url, data, schema, instance: this.client });
+    return await requestWithSchema({ method, url, data, schema });
   }
 
   // 检查 Oadin 服务是否启动
@@ -67,15 +53,149 @@ class Oadin {
     return false;
   }
 
-  // 检查用户目录是否存在 Oadin.exe, 存在则保证初始化 axios 实例
+  // 检查用户目录是否存在 Oadin.exe
   async isOadinExisted() {
     const dest = getOadinExecutablePath();
     const existed = fs.existsSync(dest);
     logAndConsole('info', `检测Oadin可执行文件是否存在: ${dest}，结果: ${existed}`);
-    if (existed) {
-      await this.ensureClient();
+
+    if (!existed) {
+      return false; // 如果文件都不存在，直接返回 false
     }
-    return existed;
+
+    // 文件存在，现在检查版本
+    const latest = await this.isOadinLatest();
+    logAndConsole('info', `Oadin是否最新版: ${latest}`);
+
+    if (!latest) {
+      // 如果不是最新版本，尝试停止 Oadin 服务
+      logAndConsole('info', 'Oadin 版本不是最新，尝试停止服务以便更新...');
+      const stopSuccess = await this.stopOadin();
+      const isOadinAvailable = await this.isOadinAvailable(2, 1000);
+      if (!isOadinAvailable) {
+        logAndConsole('info', '旧 Oadin 服务被停止。');
+        return false;
+      } else {
+        logAndConsole('info', 'Oadin 未停止。');
+        return false
+      }
+    }
+    return latest; // 返回 Oadin 是否为最新版的结果
+  }
+
+
+  async isOadinLatest() { // 如果这个函数属于 Oadin 类，需要是 async isOadinLatest() {}
+    const platform = tools.getPlatform();
+    let currentMainVersion = null;
+    let currentSubVersion = null;
+    let fullStdout = ''; // 用于存储完整的stdout，以便后续解析
+
+    if (platform === 'win32') {
+      try {
+        const userDir = os.homedir();
+        const oadinDir = path.join(userDir, 'Oadin');
+        const oadinExecutable = path.join(oadinDir, 'oadin.exe');
+
+        const originalPath = process.env.PATH;
+        if (!process.env.PATH.includes(oadinDir)) {
+          process.env.PATH = `${process.env.PATH}${path.delimiter}${oadinDir}`;
+        }
+
+        const { stdout } = await new Promise((resolve, reject) => {
+          execFile(oadinExecutable, ['version'], { timeout: 5000 }, (error, stdout, stderr) => {
+            process.env.PATH = originalPath; // 恢复 PATH
+
+            if (error) {
+              logAndConsole('error', `执行 'oadin version' 命令失败: ${error.message}, stderr: ${stderr.toString()}`);
+              return reject(error);
+            }
+            resolve({ stdout: stdout.toString() });
+          });
+        });
+        fullStdout = stdout.toString();
+
+      } catch (err) {
+        logAndConsole('error', `获取 Windows Oadin 版本失败: ${err.message}`);
+        return false;
+      }
+    } else if (platform === 'darwin') {
+      try {
+        const oadinExecutable = MAC_OADIN_PATH; // 确保 MAC_OADIN_PATH 是正确的
+        const { stdout } = await new Promise((resolve, reject) => {
+          execFile(oadinExecutable, ['version'], { timeout: 5000 }, (error, stdout, stderr) => {
+            if (error) {
+              logAndConsole('error', `执行 'oadin version' 命令失败: ${error.message}, stderr: ${stderr.toString()}`);
+              return reject(error);
+            }
+            resolve({ stdout: stdout.toString() });
+          });
+        });
+        fullStdout = stdout.toString();
+
+      } catch (err) {
+        logAndConsole('error', `获取 macOS Oadin 版本失败: ${err.message}`);
+        return false;
+      }
+    } else {
+      logAndConsole('warn', `不支持的平台，无法获取 Oadin 版本。`);
+      return false;
+    }
+
+    // 解析主版本号
+    const mainVersionMatch = fullStdout.match(/Oadin Version:\s*(v\d+\.\d+)/);
+    if (mainVersionMatch && mainVersionMatch[1]) {
+      currentMainVersion = mainVersionMatch[1];
+    }
+
+    // 解析子版本号
+    const subVersionMatch = fullStdout.match(/Oadin SubVersion:\s*(\d+)/);
+    if (subVersionMatch && subVersionMatch[1]) {
+      currentSubVersion = subVersionMatch[1];
+    }
+
+    // 1. 如果没有子版本号，则认为不是最新
+    if (!currentSubVersion) {
+      logAndConsole('info', '当前 Oadin 版本只包含主版本号，不含子版本号，视为旧版本，需要更新。');
+      return false;
+    }
+
+    // 2. 比较主版本号
+    // 假设 `this.latestMainVersion` 和 `this.latestSubVersion` 可以从 Oadin 类中访问
+    // 如果这个函数是独立的，你需要将它们作为参数传入或通过导入获取
+    const latestMainVersion = MAIN_VERSION
+    const latestSubVersion = SUB_VERSION
+
+    // 将版本字符串转换为可比较的数字（例如 v0.2 -> 0.2）
+    const parseVersion = (versionStr) => parseFloat(versionStr.replace('v', ''));
+    const currentMainNum = parseVersion(currentMainVersion);
+    const latestMainNum = parseVersion(latestMainVersion);
+
+    if (currentMainNum < latestMainNum) {
+      logAndConsole('info', `Oadin 主版本不是最新 (当前: ${currentMainVersion}, 期望: ${latestMainVersion})，需要更新。`);
+      return false;
+    } else if (currentMainNum > latestMainNum) {
+      logAndConsole('info', `Oadin 主版本 (当前: ${currentMainVersion}) 高于期望版本 (${latestMainVersion})。`);
+      return true; // 主版本更高，通常认为是最新的
+    }
+    // 如果主版本相等，继续比较子版本
+
+    // 3. 比较子版本号
+    // 将子版本号转换为数字进行比较
+    const currentSubNum = parseInt(currentSubVersion);
+    const latestSubNum = parseInt(latestSubVersion);
+
+    if (currentSubNum < latestSubNum) {
+      logAndConsole('info', `Oadin 子版本不是最新 (当前: ${currentSubVersion}, 期望: ${latestSubVersion})，需要更新。`);
+      return false;
+    } else if (currentSubNum > latestSubNum) {
+      logAndConsole('info', `Oadin 子版本 (当前: ${currentSubNum}) 高于期望版本 (${latestSubNum})。`);
+      return true; // 子版本更高，通常认为是最新的
+    }
+
+    logAndConsole('info', `Oadin 主版本 ${currentMainVersion} 子版本 ${currentSubVersion}。`);
+    // 如果主版本和子版本都匹配或更高，则认为是最新
+    logAndConsole('info', '✅ Oadin 版本是最新。');
+    return true;
   }
 
   async stopOadin() {
@@ -169,9 +289,6 @@ class Oadin {
       const downloadOk = await this._downloadFile(downloadUrl, dest, options, retries);
       if (downloadOk) {
         const installResult = await this._runOadinInstaller(dest);
-        if (installResult) {
-          await this.ensureClient();
-        }
         return installResult;
       } else {
         logAndConsole('error', '三次下载均失败，放弃安装。');
@@ -185,7 +302,6 @@ class Oadin {
 
   // 启动 Oadin 服务
   async startOadin() {
-    await this.ensureClient();
     const alreadyRunning = await this.isOadinAvailable(2, 1000);
     if (alreadyRunning) {
       logAndConsole('info', '[startOadin] Oadin 在运行中');
@@ -326,9 +442,8 @@ class Oadin {
   }
 
   async installModelStream(data) {
-    const version = await tools.getOadinVersion();
     const client = axios.create({
-      baseURL: `http://localhost:16688/oadin/${version}`,
+      baseURL: `http://localhost:16688/oadin/v0.2`,
       headers: {"Content-Type": "application/json" },
     })
     const config = { responseType: 'stream' };
@@ -376,6 +491,7 @@ class Oadin {
       }
     }
   }
+
 
   async cancelInstallModel(data) {
     return this._requestWithSchema({
@@ -493,9 +609,8 @@ class Oadin {
     }
     // 流式
     try {
-      const version = await tools.getOadinVersion();
       const client = axios.create({
-        baseURL: `http://localhost:16688/oadin/${version}`,
+        baseURL: `http://localhost:16688/oadin/v0.2`,
         headers: {"Content-Type": "application/json" },
       });
       const config = { responseType: 'stream' };
@@ -535,9 +650,8 @@ class Oadin {
       return this._requestWithSchema({ method: 'post', url: 'services/generate', data });
     }
     try {
-      const version = await tools.getOadinVersion();
       const client = axios.create({
-        baseURL: `http://localhost:16688/oadin/${version}`,
+        baseURL: `http://localhost:16688/oadin/v0.2`,
         headers: {"Content-Type": "application/json" },
       });
       const config = { responseType: 'stream' };
