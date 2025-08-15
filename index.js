@@ -12,7 +12,7 @@ const { promises: fsPromises } = require("fs");
 
 const schemas = require('./schema.js');
 const tools = require('./tools.js');
-const { logAndConsole, downloadFile, getOadinExecutablePath, runInstallerByPlatform, isHealthy } = require('./tools.js');
+const { logAndConsole, downloadFile, downloadFileWithProgress, getOadinExecutablePath, runInstallerByPlatform, isHealthy } = require('./tools.js');
 const { createAxiosInstance, requestWithSchema } = require('./axiosInstance.js')
 const { MAIN_VERSION, SUB_VERSION, MAC_OADIN_PATH, PLATFORM_CONFIG, OADIN_HEALTH, OADIN_ENGINE_PATH, } = require('./constants.js');
 
@@ -626,6 +626,123 @@ class Oadin {
       logAndConsole('info','✅ 配置文件导入成功。');
     }
     return true;
+  }
+
+    // 下载 Oadin 并支持进度回调 类似于下列函数
+    // onProgress = function(downloaded, total) {
+    //   if (total > 0) {
+    //     logAndConsole('info', `下载进度: ${((downloaded / total) * 100).toFixed(2)}%`);
+    //   }
+    // };
+  async downloadOadinStream(onProgress) {
+    try {
+      const platform = tools.getPlatform();
+      if (platform === 'unsupported' || !PLATFORM_CONFIG[platform]) {
+        logAndConsole('error', '不支持的平台');
+        return false;
+      }
+      const { downloadUrl, installerFileName, userAgent } = PLATFORM_CONFIG[platform];
+      const userDir = os.homedir();
+      const destDir = path.join(userDir, 'OadinInstaller');
+      const dest = path.join(destDir, installerFileName);
+      const options = {
+        headers: {
+          'User-Agent': userAgent,
+        },
+      };
+      const downloadOk = await downloadFileWithProgress(downloadUrl, dest, options, 1, onProgress);
+      if (downloadOk) {
+        const installResult = await this._runOadinInstaller(dest);
+        if (installResult) {
+          await this.ensureClient();
+        }
+        return installResult;
+      } else {
+        logAndConsole('error', '下载失败，放弃安装。');
+        return false;
+      }
+    } catch (err) {
+      logAndConsole('error', '下载或安装 Oadin 失败: ' + err.message);
+      return false;
+    }
+  }
+
+  // 下载 engine 并支持进度回调
+  // data {"engineName":"ollama&openvino&llamacpp"}
+  async downloadEngineStream(data) {
+    try {
+      const version = this.version || await tools.getOadinVersion();
+      const client = axios.create({
+        baseURL: `http://localhost:16688/oadin/${version}`,
+        headers: {"Content-Type": "application/json" },
+      });
+      const config = { responseType: 'stream' };
+      const res = await client.post('engine/Download/streamEngine', data, config);
+      const eventEmitter = new EventEmitter();
+      res.data.on('data', (chunk) => {
+        try {
+          let rawData = _.isString(chunk) ? _.trim(chunk) : _.trim(chunk.toString());
+          let jsonString = _.startsWith(rawData, 'data:') ? rawData.slice(5) : rawData;
+          jsonString = _.trim(jsonString);
+          if (_.isEmpty(jsonString)) {
+            throw new Error('收到空的流数据');
+          }
+          const response = JSON.parse(jsonString);
+          eventEmitter.emit('data', response);
+        } catch (err) {
+          eventEmitter.emit('error', `解析流数据失败: ${err.message}`);
+        }
+      });
+      res.data.on('error', (err) => {
+        eventEmitter.emit('error', `流式响应错误: ${err.message}`);
+      });
+      res.data.on('end', () => {
+        eventEmitter.emit('end'); // 触发结束事件
+      });
+
+      return eventEmitter;
+    } catch (error) {
+      return { code: 400, msg: error.response?.data?.message || error.message, data: null };
+    }
+  }
+
+  // 下载 model 并支持进度回调
+  // data {"engineName":"ollama&openvino&llamacpp", "modelName":"your_model_name", "modelType":"chat&generate&embed&speech-to-text"}
+  async downloadModelStream(data) {
+    try {
+      const version = this.version || await tools.getOadinVersion();
+      const client = axios.create({
+        baseURL: `http://localhost:16688/oadin/${version}`,
+        headers: {"Content-Type": "application/json" },
+      });
+      const config = { responseType: 'stream' };
+      const res = await client.post('engine/Download/streamModel', data, config);
+      const eventEmitter = new EventEmitter();
+      res.data.on('data', (chunk) => {
+        try {
+          let rawData = _.isString(chunk) ? _.trim(chunk) : _.trim(chunk.toString());
+          let jsonString = _.startsWith(rawData, 'data:') ? rawData.slice(5) : rawData;
+          jsonString = _.trim(jsonString);
+          if (_.isEmpty(jsonString)) {
+            throw new Error('收到空的流数据');
+          }
+          const response = JSON.parse(jsonString);
+          eventEmitter.emit('data', response);
+        } catch (err) {
+          eventEmitter.emit('error', `解析流数据失败: ${err.message}`);
+        }
+      });
+      res.data.on('error', (err) => {
+        eventEmitter.emit('error', `流式响应错误: ${err.message}`);
+      });
+      res.data.on('end', () => {
+        eventEmitter.emit('end'); // 触发结束事件
+      });
+
+      return eventEmitter;
+    } catch (error) {
+      return { code: 400, msg: error.response?.data?.message || error.message, data: null };
+    }
   }
 }
 

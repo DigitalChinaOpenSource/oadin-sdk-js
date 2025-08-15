@@ -152,6 +152,58 @@ async function downloadFile(url, dest, options, retries = 3) {
   return false;
 }
 
+/*
+downloadFileWithProgress 下载文件并支持进度回调
+downloadFile(url, dest, {}, 1, (downloaded, total) => {
+  console.log(`下载进度: ${((downloaded / total) * 100).toFixed(2)}%`);
+});
+*/
+async function downloadFileWithProgress(url, dest, options, retries = 3, onProgress) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      logger.info(`axios downloading... attempt ${attempt}`);
+      const dirOk = ensureDirWritable(path.dirname(dest));
+      if (!dirOk) throw new Error('目标目录不可写');
+      const response = await require('axios').get(url, {
+        ...options,
+        responseType: 'stream',
+        timeout: 15000,
+        validateStatus: status => status === 200,
+      });
+
+      const total = parseInt(response.headers['content-length'], 10) || 0;
+      let downloaded = 0;
+      let lastReported = 0;
+      const REPORT_SIZE = 1 * 1024 * 1024; // 1MB
+
+      const writer = fs.createWriteStream(dest);
+      response.data.on('data', chunk => {
+        downloaded += chunk.length;
+        if (onProgress && total && (downloaded - lastReported >= REPORT_SIZE || downloaded === total)) {
+          onProgress(downloaded, total);
+          lastReported = downloaded;
+        }
+      });
+
+      await new Promise((resolve, reject) => {
+        response.data.pipe(writer);
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+      });
+      logger.info('axios download success');
+      return true;
+    } catch (err) {
+      try { fs.unlinkSync(dest); } catch {}
+      logger.warn(`下载失败（第${attempt}次）：${err.message}`);
+      if (attempt === retries) {
+        logger.error('多次下载失败，放弃');
+        return false;
+      }
+    }
+  }
+  return false;
+}
+
 // 平台相关：获取oadin可执行文件路径
 function getOadinExecutablePath() {
   const userDir = require('os').homedir();
@@ -406,6 +458,7 @@ module.exports = {
   checkPort,
   logAndConsole,
   downloadFile,
+  downloadFileWithProgress,
   getOadinExecutablePath,
   runInstallerByPlatform,
   isHealthy,
