@@ -20,6 +20,7 @@ class Oadin {
   constructor() {
     this.version = null;
     this.client = null;
+    this.downloadConfig = null;
   }
 
   async initClient(version) {
@@ -628,13 +629,13 @@ class Oadin {
     return true;
   }
 
-    // 下载 Oadin 并支持进度回调 类似于下列函数
-    // onProgress = function(downloaded, total) {
-    //   if (total > 0) {
-    //     logAndConsole('info', `下载进度: ${((downloaded / total) * 100).toFixed(2)}%`);
-    //   }
-    // };
-  async downloadOadinStream(onProgress) {
+  // 下载 Oadin 并支持进度回调 类似于下列函数
+  // onProgress = function(downloaded, total) {
+  //   if (total > 0) {
+  //     logAndConsole('info', `下载进度: ${((downloaded / total) * 100).toFixed(2)}%`);
+  //   }
+  // };
+  async DownloadOadinStream(onProgress) {
     try {
       const platform = tools.getPlatform();
       if (platform === 'unsupported' || !PLATFORM_CONFIG[platform]) {
@@ -670,6 +671,10 @@ class Oadin {
   // 下载 engine 并支持进度回调
   // data {"engineName":"ollama&openvino&llamacpp"}
   async downloadEngineStream(data) {
+    const stream = data.stream;
+    if (!stream) {
+      return this._requestWithSchema({ method: 'post', url: 'engine/Download/streamEngine', data });
+    }
     try {
       const version = this.version || await tools.getOadinVersion();
       const client = axios.create({
@@ -709,6 +714,10 @@ class Oadin {
   // 下载 model 并支持进度回调
   // data {"engineName":"ollama&openvino&llamacpp", "modelName":"your_model_name", "modelType":"chat&generate&embed&speech-to-text"}
   async downloadModelStream(data) {
+    const stream = data.stream;
+    if (!stream) {
+      return this._requestWithSchema({ method: 'post', url: 'engine/Download/streamModel', data });
+    }
     try {
       const version = this.version || await tools.getOadinVersion();
       const client = axios.create({
@@ -742,6 +751,92 @@ class Oadin {
       return eventEmitter;
     } catch (error) {
       return { code: 400, msg: error.response?.data?.message || error.message, data: null };
+    }
+  }
+
+  // 3通过奥丁检查电脑配置
+  async getDownloadConfig(path){
+    try {
+      this.downloadConfig = JSON.parse(fs.readFileSync(path, 'utf-8'));
+      return true;
+    } catch (error) {
+      logAndConsole('error', '读取下载配置失败: ' + error.message);
+      return false;
+    }
+  }
+
+  // 4下载合适的引擎
+  async DownloadEngine(){
+    if (!this.downloadConfig) {
+      logAndConsole('error', '下载配置未加载');
+      return false;
+    }
+    try {
+      for (const engine of this.downloadConfig.support_engines) {
+        res = await this.downloadEngineStream({engineName: engine});
+        if (res.code !== 200) {
+          logAndConsole('error', '内存配置检查失败: ' + res.msg);
+          return false;
+        }
+        if (res.data.status !== "success") {
+          logAndConsole('error', '下载引擎失败: ' + engine);
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      logAndConsole('error', '下载引擎失败: ' + error.message);
+      return false;
+    }
+  }
+
+  // 5引擎配置（如适用)
+  async CheckMemoryConfig(){
+    if (!this.downloadConfig) {
+      logAndConsole('error', '下载配置未加载');
+      return false;
+    }
+    const res = await this._requestWithSchema({ method: 'post', url: 'engine/Download/checkMemoryConfig', data });
+    if (res.code !== 200) {
+      logAndConsole('error', '内存配置检查失败: ' + res.msg);
+      return false;
+    }
+    this.downloadConfig.Memory = res.data.Size;
+    return true;
+  }
+
+  // 6根据爱问学内置的奥丁配置（json配置）下载相应的模型
+  async DownloadModel(){
+    if (!this.downloadConfig) {
+      logAndConsole('error', '下载配置未加载');
+      return false;
+    }
+    try {
+        let index = 0;
+        if (this.downloadConfig.Memory > 32) {
+          index = 1;
+        }
+        const embed = await this.downloadModelStream({engineName: this.downloadConfig.embed[index].api_flavor, modelName: this.downloadConfig.embed[index].api_flavor.name});
+        if (embed.code!==200) {
+          return false;
+        }
+        if (embed.data.status !== "success") {
+          logAndConsole('error', '下载embed模型失败: ' + model);
+          return false;
+        }
+
+        const chat = await this.downloadModelStream({engineName: this.downloadConfig.chat[index].api_flavor, modelName: this.downloadConfig.chat[index].api_flavor.name});
+        if (chat.code!==200) {
+          return false;
+        }
+        if (chat.data.status !== "success") {
+          logAndConsole('error', '下载chat模型失败: ' + model);
+          return false;
+        }
+      return true;
+    } catch (error) {
+      logAndConsole('error', '下载模型失败: ' + error.message);
+      return false;
     }
   }
 }
