@@ -773,7 +773,7 @@ class Oadin {
     }
     try {
       for (const engine of this.downloadConfig.support_engines) {
-        res = await this.downloadEngineStream({engineName: engine});
+        const res = await this.downloadEngineStream({engineName: engine});
         if (res.code !== 200) {
           logAndConsole('error', '内存配置检查失败: ' + res.msg);
           return false;
@@ -796,7 +796,7 @@ class Oadin {
       logAndConsole('error', '下载配置未加载');
       return false;
     }
-    const res = await this._requestWithSchema({ method: 'post', url: 'engine/Download/checkMemoryConfig', data });
+    const res = await this._requestWithSchema({ method: 'get', url: 'engine/Download/checkMemoryConfig' });
     if (res.code !== 200) {
       logAndConsole('error', '内存配置检查失败: ' + res.msg);
       return false;
@@ -816,12 +816,7 @@ class Oadin {
         if (this.downloadConfig.Memory > 32) {
           index = 1;
         }
-        const embed = await this.downloadModelStream({
-          engineName: this.downloadConfig.embed[index].api_flavor, 
-          modelName: this.downloadConfig.embed[index].name,
-          modelType: "embed",
-
-        });
+        const embed = await this.downloadModelStream({engineName: this.downloadConfig.embed[index].api_flavor, modelName: this.downloadConfig.embed[index].name});
         if (embed.code!==200) {
           return false;
         }
@@ -830,11 +825,7 @@ class Oadin {
           return false;
         }
 
-        const chat = await this.downloadModelStream({
-          engineName: this.downloadConfig.chat[index].api_flavor, 
-          modelName: this.downloadConfig.chat[index].name,
-          modelType: "chat",
-        });
+        const chat = await this.downloadModelStream({engineName: this.downloadConfig.chat[index].api_flavor, modelName: this.downloadConfig.chat[index].name});
         if (chat.code!==200) {
           return false;
         }
