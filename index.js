@@ -783,6 +783,7 @@ class Oadin {
           return false;
         }
       }
+      logAndConsole('info', '所有引擎下载成功');
       return true;
     } catch (error) {
       logAndConsole('error', '下载引擎失败: ' + error.message);
@@ -824,7 +825,7 @@ class Oadin {
           logAndConsole('error', '下载embed模型失败: ' + model);
           return false;
         }
-
+        logAndConsole('info', '下载embed模型成功: ' + this.downloadConfig.embed[index].name);
         const chat = await this.downloadModelStream({engineName: this.downloadConfig.chat[index].api_flavor, modelName: this.downloadConfig.chat[index].name});
         if (chat.code!==200) {
           return false;
@@ -833,7 +834,8 @@ class Oadin {
           logAndConsole('error', '下载chat模型失败: ' + model);
           return false;
         }
-      return true;
+        logAndConsole('info', '下载chat模型成功: ' + this.downloadConfig.chat[index].name);
+        return true;
     } catch (error) {
       logAndConsole('error', '下载模型失败: ' + error.message);
       return false;
