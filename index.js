@@ -673,7 +673,7 @@ class Oadin {
   async downloadEngineStream(data) {
     const stream = data.stream;
     if (!stream) {
-      return this._requestWithSchema({ method: 'post', url: 'engine/Download/streamEngine', data });
+      return this._requestWithSchema({ method: 'post', url: 'engine/download/streamEngine', data });
     }
     try {
       const version = this.version || await tools.getOadinVersion();
@@ -682,7 +682,7 @@ class Oadin {
         headers: {"Content-Type": "application/json" },
       });
       const config = { responseType: 'stream' };
-      const res = await client.post('engine/Download/streamEngine', data, config);
+      const res = await client.post('engine/download/streamEngine', data, config);
       const eventEmitter = new EventEmitter();
       res.data.on('data', (chunk) => {
         try {
@@ -716,7 +716,7 @@ class Oadin {
   async downloadModelStream(data) {
     const stream = data.stream;
     if (!stream) {
-      return this._requestWithSchema({ method: 'post', url: 'engine/Download/streamModel', data });
+      return this._requestWithSchema({ method: 'post', url: 'engine/download/streamModel', data });
     }
     try {
       const version = this.version || await tools.getOadinVersion();
@@ -725,7 +725,7 @@ class Oadin {
         headers: {"Content-Type": "application/json" },
       });
       const config = { responseType: 'stream' };
-      const res = await client.post('engine/Download/streamModel', data, config);
+      const res = await client.post('engine/download/streamModel', data, config);
       const eventEmitter = new EventEmitter();
       res.data.on('data', (chunk) => {
         try {
@@ -797,7 +797,7 @@ class Oadin {
       logAndConsole('error', '下载配置未加载');
       return false;
     }
-    const res = await this._requestWithSchema({ method: 'get', url: 'engine/Download/checkMemoryConfig' });
+    const res = await this._requestWithSchema({ method: 'get', url: 'engine/download/checkMemoryConfig' });
     if (res.code !== 200) {
       logAndConsole('error', '内存配置检查失败: ' + res.msg);
       return false;
