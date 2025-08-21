@@ -2,7 +2,7 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const winston = require('winston');
-const { MAIN_VERSION, SUB_VERSION, MAC_OADIN_PATH, OADIN_HEALTH, OADIN_ENGINE_PATH, } = require('./constants.js');
+const { MAIN_VERSION, SUB_VERSION, WIN_OADIN_PATH, MAC_OADIN_PATH, OADIN_HEALTH, OADIN_ENGINE_PATH, } = require('./constants.js');
 const axios = require('axios');
 const child_process = require('child_process');
 const { execFile } = require('child_process');
@@ -206,10 +206,9 @@ async function downloadFileWithProgress(url, dest, options, retries = 3, onProgr
 
 // 平台相关：获取oadin可执行文件路径
 function getOadinExecutablePath() {
-  const userDir = require('os').homedir();
   const platform = getPlatform();
   if (platform === 'win32') {
-    return path.join(userDir, 'Oadin', 'oadin.exe');
+    return path.join(WIN_OADIN_PATH, 'oadin.exe');
   } else if (platform === 'darwin') {
     return MAC_OADIN_PATH;
   }
@@ -377,8 +376,9 @@ async function getOadinVersion(){
 
   if (platform === 'win32') {
     try {
-      const userDir = os.homedir();
-      const oadinDir = path.join(userDir, 'Oadin');
+      // const userDir = os.homedir();
+      // const oadinDir = path.join(userDir, 'Oadin');
+      const oadinDir = WIN_OADIN_PATH;
       const oadinExecutable = path.join(oadinDir, 'oadin.exe');
 
       const originalPath = process.env.PATH;

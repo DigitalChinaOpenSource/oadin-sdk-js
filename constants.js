@@ -2,7 +2,7 @@
 const MAIN_VERSION = 'v0.4';
 const SUB_VERSION = "2025071814"
 const OADIN_VERSION = 'oadin/v0.4';
-const WIN_OADIN_PATH = 'Oadin';
+const WIN_OADIN_PATH = 'C:\\Program Files\\Oadin';
 const WIN_OADIN_EXE = 'oadin.exe';
 const MAC_OADIN_PATH = '/usr/local/bin/oadin';
 const MAC_OADIN_EXE = 'oadin';
@@ -17,7 +17,7 @@ const WIN_INSTALLER_NAME = 'oadin-installer-latest.exe';
 const MAC_INSTALLER_NAME = 'oadin-installer-latest.pkg';
 const OADIN_INSTALLER_DIR = 'OadinInstaller';
 const OADIN_CONFIG_FILE = '.oadin';
-const OADIN_HEALTH = "http://localhost:16688/health";
+const OADIN_HEALTH = "http://127.0.0.1:16688/health";
 const OADIN_ENGINE_PATH = "http://localhost:16688/engine/health";
 
 const PLATFORM_CONFIG = {

@@ -14,7 +14,7 @@ const schemas = require('./schema.js');
 const tools = require('./tools.js');
 const { logAndConsole, downloadFile, downloadFileWithProgress, getOadinExecutablePath, runInstallerByPlatform, isHealthy } = require('./tools.js');
 const { createAxiosInstance, requestWithSchema } = require('./axiosInstance.js')
-const { MAIN_VERSION, SUB_VERSION, MAC_OADIN_PATH, PLATFORM_CONFIG, OADIN_HEALTH, OADIN_ENGINE_PATH, } = require('./constants.js');
+const { MAIN_VERSION, SUB_VERSION, WIN_OADIN_PATH, MAC_OADIN_PATH, PLATFORM_CONFIG, OADIN_HEALTH, OADIN_ENGINE_PATH, } = require('./constants.js');
 
 class Oadin {
   constructor() {
@@ -49,14 +49,17 @@ class Oadin {
     const fibArr = tools.fibonacci(retries, interval);
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
-        const [healthRes, engineHealthRes] = await Promise.all([
-          axios.get(OADIN_HEALTH),
-          axios.get(OADIN_ENGINE_PATH)
-        ]);
+        // const [healthRes, engineHealthRes] = await Promise.all([
+        //   axios.get(OADIN_HEALTH),
+        //   axios.get(OADIN_ENGINE_PATH)
+        // ]);
+        const healthRes = await axios.get(OADIN_HEALTH);
         const healthOk = isHealthy(healthRes.status);
-        const engineOk = isHealthy(engineHealthRes.status);
-        logAndConsole('info', `/health: ${healthOk ? '正常' : '异常'}, /engine/health: ${engineOk ? '正常' : '异常'}`);
-        if (healthOk && engineOk) return true;
+        // const engineOk = isHealthy(engineHealthRes.status);
+        // logAndConsole('info', `/health: ${healthOk ? '正常' : '异常'}, /engine/health: ${engineOk ? '正常' : '异常'}`);
+        // if (healthOk && engineOk) return true;
+        logAndConsole('info', `/health: ${healthOk ? '正常' : '异常'}`);
+        if (healthOk) return true;
       } catch (err) {
         logAndConsole('warn', `健康检查失败: ${err.message}`);
       }
@@ -82,8 +85,9 @@ class Oadin {
   async stopOadin() {
     return new Promise((resolve) => {
       const platform = tools.getPlatform();
-      const userDir = os.homedir();
-      const oadinDir = path.join(userDir, 'Oadin');
+      // const userDir = os.homedir();
+      // const oadinDir = path.join(userDir, 'Oadin');
+      const oadinDir = WIN_OADIN_PATH;
       logAndConsole('info', `尝试停止 Oadin 服务，平台: ${platform}`);
 
       let command;
@@ -194,8 +198,9 @@ class Oadin {
     }
     return new Promise((resolve, reject) => {
       const platform = tools.getPlatform();
-      const userDir = os.homedir();
-      const oadinDir = path.join(userDir, 'Oadin');
+      // const userDir = os.homedir();
+      // const oadinDir = path.join(userDir, 'Oadin');
+      const oadinDir = WIN_OADIN_PATH;
       logAndConsole('info', `oadinDir: ${oadinDir}`);
       if (platform === "unsurported") return reject(new Error(`不支持的平台`));
       if (platform === 'win32') {
