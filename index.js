@@ -781,17 +781,17 @@ class Oadin {
       for (const engine of this.downloadConfig.support_engines) {
         const res = await this.downloadEngineStream({engineName: engine});
         if (res.code !== 200) {
-          logAndConsole('error', '下载引擎失败: ' + res.msg);
+          logAndConsole('error', '下载引擎失败: ' + res);
           result = false;
           break;
         }
         if (res.data.status !== "success") {
-          logAndConsole('error', '下载引擎失败: ' + engine);
+          logAndConsole('error', '下载引擎失败: ' + res);
           result = false;
           break;
         }
       }
-      logAndConsole('info', '所有引擎下载成功');
+      logAndConsole('info', '所有引擎下载结果: ' + result);
       return result;
     } catch (error) {
       logAndConsole('error', '下载引擎失败: ' + error.message);
@@ -877,7 +877,7 @@ class Oadin {
           break;
         }
       }
-      logAndConsole('info', '全检查成功');
+      logAndConsole('info', '全检查结果: ' + result);
       return result;
     } catch (error) {
       logAndConsole('error', '全检查失败: ' + error.message);
