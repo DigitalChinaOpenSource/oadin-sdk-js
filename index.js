@@ -777,19 +777,22 @@ class Oadin {
       return false;
     }
     try {
+      let result = true;
       for (const engine of this.downloadConfig.support_engines) {
         const res = await this.downloadEngineStream({engineName: engine});
         if (res.code !== 200) {
-          logAndConsole('error', '内存配置检查失败: ' + res.msg);
-          return false;
+          logAndConsole('error', '下载引擎失败: ' + res.msg);
+          result = false;
+          break;
         }
         if (res.data.status !== "success") {
           logAndConsole('error', '下载引擎失败: ' + engine);
-          return false;
+          result = false;
+          break;
         }
       }
       logAndConsole('info', '所有引擎下载成功');
-      return true;
+      return result;
     } catch (error) {
       logAndConsole('error', '下载引擎失败: ' + error.message);
       return false;
@@ -862,17 +865,20 @@ class Oadin {
       return false;
     }
     try {
+      let result = true;
       for (const engine of this.downloadConfig.support_engines) {
         const res = await this._requestWithSchema({ method: 'post', url: 'engine/download/checkDist', data: { engineName: engine } });
         if (res.code !== 200) {
-          return false;
+          result = false;
+          break;
         }
         if (res.data.status !== "success") {
-          return false;
+          result = false;
+          break;
         }
       }
       logAndConsole('info', '全检查成功');
-      return true;
+      return result;
     } catch (error) {
       logAndConsole('error', '全检查失败: ' + error.message);
       return false;
