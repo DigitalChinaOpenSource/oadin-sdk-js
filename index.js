@@ -826,7 +826,7 @@ class Oadin {
           return false;
         }
         if (embed.data.status !== "success") {
-          logAndConsole('error', '下载embed模型失败: ' + model);
+          logAndConsole('error', '下载embed模型失败: ' + this.downloadConfig.embed[index].name);
           return false;
         }
         logAndConsole('info', '下载embed模型成功: ' + this.downloadConfig.embed[index].name);
@@ -839,7 +839,7 @@ class Oadin {
           return false;
         }
         if (chat.data.status !== "success") {
-          logAndConsole('error', '下载chat模型失败: ' + model);
+          logAndConsole('error', '下载chat模型失败: ' + this.downloadConfig.chat[index].name);
           return false;
         }
         logAndConsole('info', '下载chat模型成功: ' + this.downloadConfig.chat[index].name);
@@ -848,6 +848,30 @@ class Oadin {
       logAndConsole('error', '下载模型失败: ' + error.message);
       return false;
     }
+  }
+
+  // 全检查 奥丁/引擎/模型
+  async DownloadCheckDist() {
+    if (!this.downloadConfig) {
+      logAndConsole('error', 'DownloadCheckDist 下载配置未加载');
+      return false;
+    }
+    try {
+      for (const engine of this.downloadConfig.support_engines) {
+        const res = await this._requestWithSchema({ method: 'post', url: 'engine/download/checkDist', data: { engineName: engine } });
+        if (res.code !== 200) {
+          return false;
+        }
+        if (res.data.status !== "success") {
+          return false;
+        }
+      }
+      logAndConsole('info', '全检查成功');
+      return true;
+    } catch (error) {
+      logAndConsole('error', '全检查失败: ' + error.message);
+      return false;
+    }    
   }
 }
 
