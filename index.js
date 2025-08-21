@@ -817,7 +817,11 @@ class Oadin {
         if (this.downloadConfig.Memory > 32) {
           index = 1;
         }
-        const embed = await this.downloadModelStream({engineName: this.downloadConfig.embed[index].api_flavor, modelName: this.downloadConfig.embed[index].name});
+        const embed = await this.downloadModelStream({
+          engineName: this.downloadConfig.embed[index].api_flavor, 
+          modelName: this.downloadConfig.embed[index].name, 
+          modelType: "embed",
+        });
         if (embed.code!==200) {
           return false;
         }
@@ -826,7 +830,11 @@ class Oadin {
           return false;
         }
         logAndConsole('info', '下载embed模型成功: ' + this.downloadConfig.embed[index].name);
-        const chat = await this.downloadModelStream({engineName: this.downloadConfig.chat[index].api_flavor, modelName: this.downloadConfig.chat[index].name});
+        const chat = await this.downloadModelStream({
+          engineName: this.downloadConfig.chat[index].api_flavor, 
+          modelName: this.downloadConfig.chat[index].name,
+          modelType: "chat",
+        });
         if (chat.code!==200) {
           return false;
         }
