@@ -121,6 +121,11 @@ function logAndConsole(level, msg) {
 
 // 下载文件（通用工具方法）
 async function downloadFile(url, dest, options, retries = 3) {
+  const existed = fs.existsSync(dest);
+  logAndConsole('info', `检测downloadFile是否存在: ${dest}，结果: ${existed}`);
+  if (existed) {
+    return true;
+  }
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       logger.info(`axios downloading... attempt ${attempt}`);
@@ -159,6 +164,11 @@ downloadFile(url, dest, {}, 1, (downloaded, total) => {
 });
 */
 async function downloadFileWithProgress(url, dest, options, retries = 3, onProgress) {
+  const existed = fs.existsSync(dest);
+  logAndConsole('info', `检测downloadFileWithProgress是否存在: ${dest}，结果: ${existed}`);
+  if (existed) {
+    return true;
+  }
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       logger.info(`axios downloading... attempt ${attempt}`);
@@ -216,50 +226,25 @@ function getOadinExecutablePath() {
 }
 
 // 平台相关：运行安装包
-function runInstallerByPlatform0(installerPath) {
-  const platform = getPlatform();
-  if (platform === 'win32') {
-    return new Promise((resolve, reject) => {
-      const child = require('child_process').spawn(installerPath, ['/S'], { stdio: 'inherit' });
-      child.on('error', reject);
-      child.on('close', (code) => {
-        code === 0 ? resolve() : reject(new Error(`Installer exited with code ${code}`));
-      });
-    });
-  } else if (platform === 'darwin') {
-    return new Promise((resolve, reject) => {
-      const child = require('child_process').spawn('open', [installerPath], { stdio: 'ignore', detached: true });
-      child.on('error', reject);
-      // 轮询检测安装目录生成
-      const expectedPath = MAC_OADIN_PATH;
-      const maxRetries = 100;
-      let retries = 0;
-
-      const interval = setInterval(async () => {
-        if (fs.existsSync(expectedPath)) {
-          console.log("oadin 已添加到 /usr/local/bin ");
-          // 检查服务是否可用
-          const available = await isOadinAvailable(2, 1000);
-          if (available) {
-            clearInterval(interval);
-            resolve();
-          }
-        } else if (++retries >= maxRetries) {
-          clearInterval(interval);
-          reject(new Error('安装器未在超时前完成安装'));
-        }
-      }, 1000);
-
-    });
-  }
-  return Promise.reject(new Error('不支持的平台'));
-}
-
 function runInstallerByPlatform(installerPath) {
   const platform = getPlatform();
   if (platform === 'win32') {
+    dest = getOadinExecutablePath();
+    const existed = fs.existsSync(dest);
+    logAndConsole('info', `检测getOadinExecutablePath是否存在: ${dest}，结果: ${existed}`);
+    if (existed) {
+      return true;
+    }
     return new Promise((resolve, reject) => {
-      const child = child_process.spawn(installerPath, ['/S'], { stdio: 'inherit' });
+      // const child = require('child_process').spawn(installerPath, ['/S'], { stdio: 'inherit' });
+      const child = child_process.spawn(
+        'powershell.exe',
+        [
+          '-Command',
+          `Start-Process -FilePath '${installerPath}' -ArgumentList '/S' -Verb runAs`
+        ],
+        { stdio: 'inherit' }
+      );
       child.on('error', reject);
       child.on('close', (code) => {
         code === 0 ? resolve() : reject(new Error(`Installer exited with code ${code}`));
