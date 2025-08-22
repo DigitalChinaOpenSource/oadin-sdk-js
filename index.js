@@ -208,8 +208,12 @@ class Oadin {
           process.env.PATH = `${process.env.PATH}${path.delimiter}${oadinDir}`;
           logAndConsole('info', '添加到临时环境变量');
         }
-        const command = 'cmd.exe';
-        const args = ['/c', 'start-oadin.bat'];
+        // const command = 'cmd.exe';
+        // const args = ['/c', 'start-oadin.bat'];
+        // logAndConsole('info', `正在运行命令: ${command} ${args.join(' ')}`);
+        // 直接调用 oadin.exe
+        const command = path.join(oadinDir, 'oadin.exe');
+        const args = ['server', 'start', '-d'];
         logAndConsole('info', `正在运行命令: ${command} ${args.join(' ')}`);
         execFile(command, args, { windowsHide: true }, async (error, stdout, stderr) => {
           if (error) logAndConsole('error', 'oadin server start:error ' + error);
