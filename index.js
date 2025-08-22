@@ -795,7 +795,7 @@ class Oadin {
           break;
         }
       }
-      logAndConsole('info', '所有引擎下载结果: ' + JSON.stringify(res));
+      logAndConsole('info', '所有引擎下载结果: ' + JSON.stringify(result));
       return result;
     } catch (error) {
       logAndConsole('error', '下载引擎失败: ' + error.message);
