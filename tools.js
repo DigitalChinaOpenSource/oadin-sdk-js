@@ -114,9 +114,9 @@ const logger = winston.createLogger({
 
 function logAndConsole(level, msg) {
   logger.log({ level, message: msg });
-  if (level === 'info') console.log(msg);
-  else if (level === 'warn') console.warn(msg);
-  else if (level === 'error') console.error(msg);
+  // if (level === 'info') console.log(msg);
+  // else if (level === 'warn') console.warn(msg);
+  // else if (level === 'error') console.error(msg);
 }
 
 // 下载文件（通用工具方法）
