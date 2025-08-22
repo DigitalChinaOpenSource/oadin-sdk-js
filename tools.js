@@ -226,7 +226,7 @@ function getOadinExecutablePath() {
 }
 
 // 平台相关：运行安装包
-function runInstallerByPlatform(installerPath) {
+async function runInstallerByPlatform(installerPath) {
   const platform = getPlatform();
   if (platform === 'win32') {
     dest = getOadinExecutablePath();
