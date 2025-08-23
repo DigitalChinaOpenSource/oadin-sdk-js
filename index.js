@@ -532,6 +532,12 @@ class Oadin {
         eventEmitter.emit('end'); // 触发结束事件
       });
 
+      // 增加取消回调   eventEmitter.emit("cancel");
+      eventEmitter.on('cancel', () => {
+        logAndConsole('info', '手动取消流式响应');
+        res.data.destroy(); // 销毁流
+      });
+
       return eventEmitter;
     } catch (error) {
       return { code: 400, msg: error.response?.data?.message || error.message, data: null };
