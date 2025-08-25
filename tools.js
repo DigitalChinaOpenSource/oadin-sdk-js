@@ -121,11 +121,6 @@ function logAndConsole(level, msg) {
 
 // 下载文件（通用工具方法）
 async function downloadFile(url, dest, options, retries = 3) {
-  const existed = fs.existsSync(dest);
-  logAndConsole('info', `检测downloadFile是否存在: ${dest}，结果: ${existed}`);
-  if (existed) {
-    return true;
-  }
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       logger.info(`axios downloading... attempt ${attempt}`);
@@ -164,11 +159,6 @@ downloadFile(url, dest, {}, 1, (downloaded, total) => {
 });
 */
 async function downloadFileWithProgress(url, dest, options, retries = 3, onProgress) {
-  const existed = fs.existsSync(dest);
-  logAndConsole('info', `检测downloadFileWithProgress是否存在: ${dest}，结果: ${existed}`);
-  if (existed) {
-    return true;
-  }
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       logger.info(`axios downloading... attempt ${attempt}`);
@@ -229,12 +219,6 @@ function getOadinExecutablePath() {
 async function runInstallerByPlatform(installerPath) {
   const platform = getPlatform();
   if (platform === 'win32') {
-    dest = getOadinExecutablePath();
-    const existed = fs.existsSync(dest);
-    logAndConsole('info', `检测getOadinExecutablePath是否存在: ${dest}，结果: ${existed}`);
-    if (existed) {
-      return true;
-    }
     return new Promise((resolve, reject) => {
       // const child = require('child_process').spawn(installerPath, ['/S'], { stdio: 'inherit' });
       const child = child_process.spawn(
