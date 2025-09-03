@@ -198,12 +198,18 @@ class Oadin {
     }
     return new Promise((resolve, reject) => {
       const platform = tools.getPlatform();
-      // const userDir = os.homedir();
-      // const oadinDir = path.join(userDir, 'Oadin');
+      // 1.0 相关版本是安装在用户目录，且增加了环境变量
+      const userDir = os.homedir();
+      const oadinDirOld = path.join(userDir, 'Oadin');
+      // 2.0 相关版本是安装在系统目录
       const oadinDir = WIN_OADIN_PATH;
       logAndConsole('info', `oadinDir: ${oadinDir}`);
       if (platform === "unsurported") return reject(new Error(`不支持的平台`));
       if (platform === 'win32') {
+        if (process.env.PATH.includes(oadinDirOld)) {
+          // 删除旧的环境变量
+          process.env.PATH = process.env.PATH.split(path.delimiter).filter(p => p !== oadinDirOld).join(path.delimiter);
+        }
         if (!process.env.PATH.includes(oadinDir)) {
           process.env.PATH = `${process.env.PATH}${path.delimiter}${oadinDir}`;
           logAndConsole('info', '添加到临时环境变量');
