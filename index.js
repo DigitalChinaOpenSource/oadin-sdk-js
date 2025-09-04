@@ -21,6 +21,8 @@ class Oadin {
     this.version = null;
     this.client = null;
     this.downloadConfig = null;
+    this.defaultEmbedModel = "";
+    this.defaultChatModel = "";
   }
 
   async initClient(version) {
@@ -507,6 +509,9 @@ class Oadin {
       // 非流式
       return this._requestWithSchema({ method: 'post', url: 'services/chat', data });
     }
+    if (this.defaultChatModel && data.model !== this.defaultChatModel) {
+      data.model = this.defaultChatModel;
+    }
     // 流式
     try {
       const version = await tools.getOadinVersion();
@@ -604,6 +609,9 @@ class Oadin {
 
   // embed服务
   async embed(data) {
+    if (this.defaultEmbedModel && data.model !== this.defaultEmbedModel) {
+      data.model = this.defaultEmbedModel;
+    }
     return this._requestWithSchema({
       method: 'post',
       url: '/services/embed',
@@ -621,7 +629,7 @@ class Oadin {
       return true;
     }
     
-    const isOadinExisted = this.isOadinExisted();
+    const isOadinExisted = await this.isOadinExisted();
     if (!isOadinExisted) {
       const downloadSuccess = await this.downloadOadin();
       if (!downloadSuccess) {
@@ -816,7 +824,7 @@ class Oadin {
   }
 
   // 5引擎配置（如适用)
-  async CheckMemoryConfig(){
+  async CheckMemoryConfig() {
     if (!this.downloadConfig) {
       logAndConsole('error', '下载配置未加载');
       return false;
@@ -827,6 +835,7 @@ class Oadin {
       return false;
     }
     this.downloadConfig.Memory = res.data.Size;
+    await this.SetDefaultModel();
     return true;
   }
 
@@ -894,11 +903,30 @@ class Oadin {
         }
       }
       logAndConsole('info', '全检查结果: ' + result);
+      if (this.defaultEmbedModel === "" || this.defaultChatModel === "") {
+        await this.CheckMemoryConfig();
+      }
       return result;
     } catch (error) {
       logAndConsole('error', '全检查失败: ' + error.message);
       return false;
     }    
+  }
+
+  // 赋值默认模型
+  async SetDefaultModel() {
+    if (!this.downloadConfig) {
+      logAndConsole('error', 'DownloadCheckDist 下载配置未加载');
+      return false;
+    }
+    let index = 0;
+    if (this.downloadConfig.Memory > 32) {
+      index = 1;
+    }
+    this.defaultEmbedModel = this.downloadConfig.embed[index].name;
+    this.defaultChatModel = this.downloadConfig.chat[index].name;
+
+    logAndConsole('info', 'SetDefaultModel', { embed: this.defaultEmbedModel, chat: this.defaultChatModel });
   }
 }
 
