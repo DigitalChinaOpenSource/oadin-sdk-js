@@ -903,7 +903,7 @@ class Oadin {
         }
       }
       logAndConsole('info', '全检查结果: ' + result);
-      if (this.defaultEmbedModel === "" || this.defaultChatModel === "") {
+      if (result && (this.defaultEmbedModel === "" || this.defaultChatModel === "")) {
         await this.CheckMemoryConfig();
       }
       return result;
@@ -926,7 +926,13 @@ class Oadin {
     this.defaultEmbedModel = this.downloadConfig.embed[index].name;
     this.defaultChatModel = this.downloadConfig.chat[index].name;
 
-    logAndConsole('info', 'SetDefaultModel', { embed: this.defaultEmbedModel, chat: this.defaultChatModel });
+    logAndConsole('info', 'SetDefaultModel embed: ' + this.defaultEmbedModel);
+    logAndConsole('info', 'SetDefaultModel chat: ' + this.defaultChatModel);
+  }
+
+  // 获取默认模型
+  GetDefaultModel() {
+    return { embed: this.defaultEmbedModel, chat: this.defaultChatModel };
   }
 }
 
