@@ -616,7 +616,7 @@ class Oadin {
       method: 'post',
       url: '/services/embed',
       data,
-      schema: { request: schemas.embeddingRequest, response: schemas.embeddingResponse }
+      // schema: { request: schemas.embeddingRequest, response: schemas.embeddingResponse }
     });
   }
 
