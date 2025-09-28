@@ -12,7 +12,7 @@ const { promises: fsPromises } = require("fs");
 
 const schemas = require('./schema.js');
 const tools = require('./tools.js');
-const { logAndConsole, downloadFile, downloadFileWithProgress, getOadinExecutablePath, runInstallerByPlatform, isHealthy } = require('./tools.js');
+const { logAndConsole, downloadFile, downloadFileWithProgress, getOadinExecutablePath, runInstallerByPlatform, isHealthy, isOadinExistedAndUpdate } = require('./tools.js');
 const { createAxiosInstance, requestWithSchema } = require('./axiosInstance.js')
 const { MAIN_VERSION, SUB_VERSION, WIN_OADIN_PATH, MAC_OADIN_PATH, PLATFORM_CONFIG, OADIN_HEALTH, OADIN_ENGINE_PATH, } = require('./constants.js');
 
@@ -79,6 +79,7 @@ class Oadin {
     const existed = fs.existsSync(dest);
     logAndConsole('info', `检测Oadin可执行文件是否存在: ${dest}，结果: ${existed}`);
     if (existed) {
+      await isOadinExistedAndUpdate(this.downloadConfig?.version);
       await this.ensureClient();
     }
     return existed;
@@ -905,6 +906,10 @@ class Oadin {
       logAndConsole('info', '全检查结果: ' + result);
       if (result && (this.defaultEmbedModel === "" || this.defaultChatModel === "")) {
         await this.CheckMemoryConfig();
+      }
+      if (result) {
+        await isOadinExistedAndUpdate(this.downloadConfig?.version);
+        await this.ensureClient();
       }
       return result;
     } catch (error) {

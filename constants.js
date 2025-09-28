@@ -1,6 +1,6 @@
 // 常量定义
 const MAIN_VERSION = 'v0.4';
-const SUB_VERSION = "2025071814"
+const SUB_VERSION = "test-2.2.10"
 const OADIN_VERSION = 'oadin/v0.4';
 const WIN_OADIN_PATH = 'C:\\Program Files\\Oadin';
 const WIN_OADIN_EXE = 'oadin.exe';
@@ -8,10 +8,10 @@ const MAC_OADIN_PATH = '/usr/local/bin/oadin';
 const MAC_OADIN_EXE = 'oadin';
 //TODO: 把下载域名拆开
 // TEST
-// const WIN_INSTALLER_URL = 'http://10.3.70.145:32018/repository/raw-hosted/intel-ai-pc/oadin/releases/win/oadin-installer-latest.exe';
-// const MAC_INSTALLER_URL = 'http://10.3.70.145:32018/repository/raw-hosted/intel-ai-pc/oadin/releases/mac/oadin-installer-latest.pkg'
-const WIN_INSTALLER_URL = 'https://oss-aipc.dcclouds.com/oadin/dist/windows/oadin-installer-latest.exe';
-const MAC_INSTALLER_URL = 'https://oss-aipc.dcclouds.com/oadin/dist/macos/oadin-installer-latest.pkg';
+const WIN_INSTALLER_URL = 'http://10.3.70.145:32018/repository/raw-hosted/intel-ai-pc/oadin/dist/win/oadin-installer-latest.exe';
+const MAC_INSTALLER_URL = 'http://10.3.70.145:32018/repository/raw-hosted/intel-ai-pc/oadin/dist/mac/oadin-installer-latest.pkg'
+// const WIN_INSTALLER_URL = 'https://oss-aipc.dcclouds.com/oadin/dist/windows/oadin-installer-latest.exe';
+// const MAC_INSTALLER_URL = 'https://oss-aipc.dcclouds.com/oadin/dist/macos/oadin-installer-latest.pkg';
 const WIN_INSTALLER_NAME = 'oadin-installer-latest.exe';
 const MAC_INSTALLER_NAME = 'oadin-installer-latest.pkg';
 const OADIN_INSTALLER_DIR = 'OadinInstaller';
