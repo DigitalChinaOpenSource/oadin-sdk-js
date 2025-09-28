@@ -221,15 +221,15 @@ async function runInstallerByPlatform(installerPath) {
   const platform = getPlatform();
   if (platform === 'win32') {
     return new Promise((resolve, reject) => {
-      const child = require('child_process').spawn(installerPath, ['/S'], { stdio: 'inherit' });
-      // const child = child_process.spawn(
-      //   'powershell.exe',
-      //   [
-      //     '-Command',
-      //     `Start-Process -FilePath '${installerPath}' -ArgumentList '/S' -Verb runAs`
-      //   ],
-      //   { stdio: 'inherit' }
-      // );
+      // const child = require('child_process').spawn(installerPath, ['/S'], { stdio: 'inherit' });
+      const child = child_process.spawn(
+        'powershell.exe',
+        [
+          '-Command',
+          `Start-Process -FilePath '${installerPath}' -ArgumentList '/S' -Verb runAs`
+        ],
+        { stdio: 'inherit' }
+      );
       child.on('error', reject);
       child.on('close', (code) => {
         code === 0 ? resolve() : reject(new Error(`Installer exited with code ${code}`));

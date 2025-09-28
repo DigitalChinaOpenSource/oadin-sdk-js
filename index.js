@@ -174,7 +174,13 @@ class Oadin {
           'User-Agent': userAgent,
         },
       };
-      const downloadOk = await this._downloadFile(downloadUrl, dest, options, retries);
+      let targetSubVersion = SUB_VERSION;
+      if (this.downloadConfig && this.downloadConfig.version !== 'xxxxx') {
+        targetSubVersion = this.downloadConfig.version;
+      }
+      const downloadUrlReplaced = downloadUrl.replace('latest', targetSubVersion);
+      logAndConsole('info', `downloadOadin url: ${downloadUrlReplaced}`);
+      const downloadOk = await this._downloadFile(downloadUrlReplaced, dest, options, retries);
       if (downloadOk) {
         const installResult = await this._runOadinInstaller(dest);
         if (installResult) {
