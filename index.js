@@ -12,7 +12,7 @@ const { promises: fsPromises } = require("fs");
 
 const schemas = require('./schema.js');
 const tools = require('./tools.js');
-const { logAndConsole, downloadFile, downloadFileWithProgress, getOadinExecutablePath, runInstallerByPlatform, isHealthy, isOadinExistedAndUpdate } = require('./tools.js');
+const { logAndConsole, downloadFile, downloadFileWithProgress, getOadinExecutablePath, runInstallerByPlatform, isHealthy } = require('./tools.js');
 const { createAxiosInstance, requestWithSchema } = require('./axiosInstance.js')
 const { MAIN_VERSION, SUB_VERSION, WIN_OADIN_PATH, MAC_OADIN_PATH, PLATFORM_CONFIG, OADIN_HEALTH, OADIN_ENGINE_PATH, } = require('./constants.js');
 
@@ -79,7 +79,7 @@ class Oadin {
     const existed = fs.existsSync(dest);
     logAndConsole('info', `检测Oadin可执行文件是否存在: ${dest}，结果: ${existed}`);
     if (existed) {
-      await isOadinExistedAndUpdate(this.downloadConfig?.version);
+      await this.isOadinExistedAndUpdate(this.downloadConfig?.version);
       await this.ensureClient();
     }
     return existed;
@@ -909,13 +909,13 @@ class Oadin {
           break;
         }
       }
+      if (result) {
+        await this.isOadinExistedAndUpdate(this.downloadConfig?.version);
+        await this.ensureClient();
+      }
       logAndConsole('info', '全检查结果: ' + result);
       if (result && (this.defaultEmbedModel === "" || this.defaultChatModel === "")) {
         await this.CheckMemoryConfig();
-      }
-      if (result) {
-        await isOadinExistedAndUpdate(this.downloadConfig?.version);
-        await this.ensureClient();
       }
       return result;
     } catch (error) {
@@ -944,6 +944,98 @@ class Oadin {
   // 获取默认模型
   GetDefaultModel() {
     return { embed: this.defaultEmbedModel, chat: this.defaultChatModel };
+  }
+
+  /**
+    除了二进制文件是否存在，还要检查版本是否匹配
+    版本匹配模式有两种，一种是根据配置文件，一种是根据sdk版本
+  */
+  async isOadinExistedAndUpdate(configVersion = null) {
+    // 假设目标版本是oadin-installer-test-2.2.10，与当前已存在奥丁版本不符合，则需要更新
+    let targetSubVersion = SUB_VERSION;
+    if (configVersion && configVersion !== 'xxxxx') {
+      targetSubVersion = configVersion;
+    }
+    let currentSubVersion = null;
+    let fullStdout = ''; // 用于存储完整的stdout，以便后续解析
+    logAndConsole('info', `isOadinExistedAndUpdate 目标版本: (${targetSubVersion})，开始检查是否需要更新...`);
+    let oadinExecutable;
+    try {
+      const platform = tools.getPlatform();
+      if (platform === 'unsupported' || !PLATFORM_CONFIG[platform]) {
+        logAndConsole('error', 'isOadinExistedAndUpdate 不支持的平台');
+        return false;
+      }
+      if (platform === 'win32') {
+        const oadinDir = WIN_OADIN_PATH;
+        oadinExecutable = path.join(oadinDir, 'oadin.exe');
+
+        const originalPath = process.env.PATH;
+        if (!process.env.PATH.includes(oadinDir)) {
+          process.env.PATH = `${process.env.PATH}${path.delimiter}${oadinDir}`;
+        }
+
+        const { stdout } = await new Promise((resolve, reject) => {
+          execFile(oadinExecutable, ['version'], { timeout: 5000 }, (error, stdout, stderr) => {
+            process.env.PATH = originalPath; // 恢复 PATH
+
+            if (error) {
+              logAndConsole('error', `isOadinExistedAndUpdate 执行 'oadin version' 命令失败: ${error.message}, stderr: ${stderr.toString()}`);
+              return reject(error);
+            }
+            resolve({ stdout: stdout.toString() });
+          });
+        });
+        fullStdout = stdout.toString();
+      } else if (platform === 'darwin') {
+        oadinExecutable = MAC_OADIN_PATH; // 确保 MAC_OADIN_PATH 是正确的
+        const { stdout } = await new Promise((resolve, reject) => {
+          execFile(oadinExecutable, ['version'], { timeout: 5000 }, (error, stdout, stderr) => {
+            if (error) {
+              logAndConsole('error', `isOadinExistedAndUpdate 执行 'oadin version' 命令失败: ${error.message}, stderr: ${stderr.toString()}`);
+              return reject(error);
+            }
+            resolve({ stdout: stdout.toString() });
+          });
+        });
+        fullStdout = stdout.toString();
+      } else {
+        logAndConsole('warn', `isOadinExistedAndUpdate 不支持的平台，无法获取 Oadin 版本。`);
+        return false;
+      }
+
+      // 解析子版本号
+      const subVersionMatch = fullStdout.match(/Oadin SubVersion:\s*([^\r\n]+)/);
+      if (subVersionMatch && subVersionMatch[1]) {
+        currentSubVersion = subVersionMatch[1];
+      }
+
+      logAndConsole('info', `isOadinExistedAndUpdate Oadin 版本匹配。当前版本: (${currentSubVersion})`);
+      if (currentSubVersion === targetSubVersion) {
+        return true;
+      }
+
+      const { downloadUrl, installerFileName, userAgent } = PLATFORM_CONFIG[platform];
+      const downloadUrlReplaced = downloadUrl.replace('latest', targetSubVersion);
+      const userDir = os.homedir();
+      const destDir = path.join(userDir, 'OadinInstaller');
+      const dest = path.join(destDir, installerFileName);
+      const options = { headers: { 'User-Agent': userAgent, }, };
+      logAndConsole('info', `isOadinExistedAndUpdate 版本不匹配，开始下载并安装新版本。下载地址: ${downloadUrlReplaced}，目标路径: ${dest}`);
+      const downloadOk = await downloadFile(downloadUrlReplaced, dest, options, 3);
+      logAndConsole('info', `isOadinExistedAndUpdate 下载结果: ${downloadOk}`);
+      if (downloadOk) {
+        const installResult = await runInstallerByPlatform(dest);
+        logAndConsole('info', `isOadinExistedAndUpdate 安装结果: ${installResult}`);
+        return true;
+      } else {
+        logAndConsole('error', 'isOadinExistedAndUpdate 三次下载均失败，放弃安装。');
+        return false;
+      }
+    } catch (error) {
+      logAndConsole('error', `isOadinExistedAndUpdate 异常: ${error.message}`);
+      return false;
+    }
   }
 }
 
