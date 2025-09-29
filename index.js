@@ -166,8 +166,11 @@ class Oadin {
         return false;
       }
       const { downloadUrl, installerFileName, userAgent } = PLATFORM_CONFIG[platform];
-      const userDir = os.homedir();
-      const destDir = path.join(userDir, 'OadinInstaller');
+      // Windows：C:\Users\<用户名>\AppData\Local\Temp
+      // macOS: /tmp
+      const tempDir = os.tmpdir();
+      const destDir = path.join(tempDir, 'OadinInstaller');
+      logAndConsole('info', `OadinInstaller 临时下载目录: ${destDir}`);
       const dest = path.join(destDir, installerFileName);
       const options = {
         headers: {
