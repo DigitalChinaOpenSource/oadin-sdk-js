@@ -857,8 +857,11 @@ class Oadin {
     }
     try {
         let index = 0;
-        if (this.downloadConfig.Memory > 32) {
+        if (this.downloadConfig.Memory > 16 && this.downloadConfig.Memory <= 32) {
           index = 1;
+        }        
+        if (this.downloadConfig.Memory > 32) {
+          index = 2;
         }
         const embed = await this.downloadModelStream({
           engineName: this.downloadConfig.embed[index].api_flavor, 
@@ -934,8 +937,11 @@ class Oadin {
       return false;
     }
     let index = 0;
-    if (this.downloadConfig.Memory > 32) {
+    if (this.downloadConfig.Memory > 16 && this.downloadConfig.Memory <= 32) {
       index = 1;
+    }        
+    if (this.downloadConfig.Memory > 32) {
+      index = 2;
     }
     this.defaultEmbedModel = this.downloadConfig.embed[index].name;
     this.defaultChatModel = this.downloadConfig.chat[index].name;
