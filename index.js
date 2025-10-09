@@ -796,6 +796,7 @@ class Oadin {
   // 3通过奥丁检查电脑配置
   async getDownloadConfig(path){
     try {
+      logAndConsole('info', '读取下载配置文件: ' + path);
       this.downloadConfig = JSON.parse(fs.readFileSync(path, 'utf-8'));
       return true;
     } catch (error) {
