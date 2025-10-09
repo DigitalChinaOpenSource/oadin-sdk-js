@@ -1,6 +1,6 @@
 // 常量定义
 const MAIN_VERSION = 'v0.4';
-const SUB_VERSION = "test-2.2.14";
+const SUB_VERSION = "test-2.2.15";
 const OADIN_VERSION = 'oadin/v0.4';
 const WIN_OADIN_PATH = 'C:\\Program Files\\Oadin';
 const WIN_OADIN_EXE = 'oadin.exe';
