@@ -46,7 +46,7 @@ class Oadin {
   }
 
   // 检查 Oadin 服务是否启动
-  async isOadinAvailable(retries = 5, interval = 1000) {
+  async isOadinAvailable(retries = 3, interval = 3000) {
     logAndConsole('info', '检测Oadin服务可用性...');
     const fibArr = tools.fibonacci(retries, interval);
     for (let attempt = 0; attempt < retries; attempt++) {
@@ -66,7 +66,8 @@ class Oadin {
         logAndConsole('warn', `健康检查失败: ${err.message}`);
       }
       if (attempt < retries - 1) {
-        await new Promise(r => setTimeout(r, fibArr[attempt]));
+        await new Promise(r => setTimeout(r, interval));
+        logAndConsole('info', `第 ${attempt + 1} 次检测 Oadin 服务不可用，等待 ${interval} ms 后重试...`);
       }
     }
     logAndConsole('warn', 'Oadin服务不可用');
@@ -203,7 +204,7 @@ class Oadin {
   // 启动 Oadin 服务
   async startOadin() {
     await this.ensureClient();
-    const alreadyRunning = await this.isOadinAvailable(2, 1000);
+    const alreadyRunning = await this.isOadinAvailable(3, 3000);
     if (alreadyRunning) {
       logAndConsole('info', '[startOadin] Oadin 在运行中');
       return true;
@@ -241,7 +242,7 @@ class Oadin {
           if (error || output.includes('error')) {
             return resolve(false);
           }
-          const available = await this.isOadinAvailable(5, 1500);
+          const available = await this.isOadinAvailable(3, 3000);
           return resolve(available);
         });
       } else if (platform === 'darwin') {
