@@ -226,7 +226,7 @@ async function runInstallerByPlatform(installerPath) {
           '-Command',
           `Start-Process -FilePath '${installerPath}' -ArgumentList '/S' -Verb runAs`
         ],
-        { stdio: 'inherit' }
+        { stdio: 'inherit', windowsHide: true }
       );
       child.on('error', reject);
       child.on('close', (code) => {

@@ -562,7 +562,22 @@ class Oadin {
 
       return eventEmitter;
     } catch (error) {
-      return { code: 400, msg: error.response?.data?.message || error.message, data: null };
+      let msg = '';
+      if (error instanceof AggregateError || error?.name === 'AggregateError') {
+        msg = '连接 Oadin 服务失败，可能未启动， 请重启应用';
+      } else if (error.isAxiosError || error?.name === 'AxiosError') {
+        if (error.response?.status === 500) {
+          msg = '连接引擎失败，可能未启动， 请重启应用';
+        } else if (error.response?.status === 404) {
+          msg = '连接大模型失败，可能未下载， 请重启应用';
+        } else {
+          msg = error.response?.data?.message || error.message;
+        }
+      } else {
+        msg = error.response?.data?.message || error.message;
+      }
+      logAndConsole('error', `chat 流式请求失败: ${error}`);
+      return { code: 400, msg, data: null };
     }
   }
 
@@ -1036,8 +1051,18 @@ class Oadin {
       const downloadOk = await downloadFile(downloadUrlReplaced, dest, options, 3);
       logAndConsole('info', `isOadinExistedAndUpdate 下载结果: ${downloadOk}`);
       if (downloadOk) {
+        if (platform === 'darwin') {
+          // 奥丁MAC的post脚本无法关闭旧版本服务，只能在sdk去驱动关闭
+          const alreadyRunning = await this.isOadinAvailable(3, 3000);
+          if (alreadyRunning) {
+            this.stopOadin();
+            await new Promise(r => setTimeout(r, 3000)); // 等待3秒关闭
+          }          
+        }
         const installResult = await runInstallerByPlatform(dest);
         logAndConsole('info', `isOadinExistedAndUpdate 安装结果: ${installResult}`);
+        // 由于是静默安装执行器，安装后需要等待一段时间重启
+        await new Promise(r => setTimeout(r, 10000)); // 等待10秒再检查
         return true;
       } else {
         logAndConsole('error', 'isOadinExistedAndUpdate 三次下载均失败，放弃安装。');
