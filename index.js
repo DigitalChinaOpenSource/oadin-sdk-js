@@ -1061,8 +1061,6 @@ class Oadin {
         }
         const installResult = await runInstallerByPlatform(dest);
         logAndConsole('info', `isOadinExistedAndUpdate 安装结果: ${installResult}`);
-        // 由于是静默安装执行器，安装后需要等待一段时间重启
-        await new Promise(r => setTimeout(r, 10000)); // 等待10秒再检查
         return true;
       } else {
         logAndConsole('error', 'isOadinExistedAndUpdate 三次下载均失败，放弃安装。');
