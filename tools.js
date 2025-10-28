@@ -2,10 +2,11 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const winston = require('winston');
-const { MAIN_VERSION, SUB_VERSION, WIN_OADIN_PATH, MAC_OADIN_PATH, OADIN_HEALTH, OADIN_ENGINE_PATH } = require('./constants.js');
+const { MAIN_VERSION, SUB_VERSION, WIN_OADIN_PATH, MAC_OADIN_PATH, OADIN_HEALTH, OADIN_ENGINE_PATH, Get_Version_Url } = require('./constants.js');
 const axios = require('axios');
 const child_process = require('child_process');
 const { execFile } = require('child_process');
+const { log } = require('console');
 
 async function isOadinAvailable(retries = 5, interval = 1000) {
   logAndConsole('info', '检测Oadin服务可用性...');
@@ -419,6 +420,18 @@ async function getOadinVersion(){
   return oadinVersion;
 }
 
+// 获取oadin最新版本号信息
+async function getOadinLatestVersion() {
+  try {
+    const response = await axios.get(Get_Version_Url);
+    logAndConsole('info', `获取 Oadin 最新版本成功: ${JSON.stringify(response.data)}`);
+    return response.data.data || null;
+  } catch (error) {
+    logAndConsole('error', `获取 Oadin 最新版本失败: ${error.message}`);
+    return null;
+  }
+}
+
 module.exports = {
   getPlatform,
   ensureDirWritable,
@@ -431,4 +444,5 @@ module.exports = {
   runInstallerByPlatform,
   isHealthy,
   getOadinVersion,
+  getOadinLatestVersion,
 };

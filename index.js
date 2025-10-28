@@ -12,7 +12,7 @@ const { promises: fsPromises } = require("fs");
 
 const schemas = require('./schema.js');
 const tools = require('./tools.js');
-const { logAndConsole, downloadFile, downloadFileWithProgress, getOadinExecutablePath, runInstallerByPlatform, isHealthy } = require('./tools.js');
+const { logAndConsole, downloadFile, downloadFileWithProgress, getOadinExecutablePath, runInstallerByPlatform, isHealthy, getOadinLatestVersion } = require('./tools.js');
 const { createAxiosInstance, requestWithSchema } = require('./axiosInstance.js')
 const { MAIN_VERSION, SUB_VERSION, WIN_OADIN_PATH, MAC_OADIN_PATH, PLATFORM_CONFIG, OADIN_HEALTH, OADIN_ENGINE_PATH, } = require('./constants.js');
 
@@ -982,6 +982,13 @@ class Oadin {
     if (configVersion && configVersion !== 'xxxxx') {
       targetSubVersion = configVersion;
     }
+    if (targetSubVersion === 'latest') {
+      // 获取最新的版本号
+      const latestVersion = await getOadinLatestVersion();
+      if (latestVersion) {
+        targetSubVersion = latestVersion;
+      }
+    }
     let currentSubVersion = null;
     let fullStdout = ''; // 用于存储完整的stdout，以便后续解析
     logAndConsole('info', `isOadinExistedAndUpdate 目标版本: (${targetSubVersion})，开始检查是否需要更新...`);
@@ -1043,8 +1050,10 @@ class Oadin {
 
       const { downloadUrl, installerFileName, userAgent } = PLATFORM_CONFIG[platform];
       const downloadUrlReplaced = downloadUrl.replace('latest', targetSubVersion);
-      const userDir = os.homedir();
-      const destDir = path.join(userDir, 'OadinInstaller');
+      // Windows：C:\Users\<用户名>\AppData\Local\Temp
+      // macOS: /tmp
+      const tempDir = os.tmpdir();
+      const destDir = path.join(tempDir, 'OadinInstaller');
       const dest = path.join(destDir, installerFileName);
       const options = { headers: { 'User-Agent': userAgent, }, };
       logAndConsole('info', `isOadinExistedAndUpdate 版本不匹配，开始下载并安装新版本。下载地址: ${downloadUrlReplaced}，目标路径: ${dest}`);
