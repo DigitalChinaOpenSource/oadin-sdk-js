@@ -69,8 +69,8 @@ class Oadin {
         logAndConsole('warn', `健康检查失败: ${err.message}`);
       }
       if (attempt < retries - 1) {
-        await new Promise(r => setTimeout(r, interval));
         logAndConsole('info', `第 ${attempt + 1} 次检测 Oadin 服务不可用，等待 ${interval} ms 后重试...`);
+        await new Promise(r => setTimeout(r, interval));
       }
     }
     logAndConsole('warn', 'Oadin服务不可用');
@@ -154,7 +154,7 @@ class Oadin {
     logAndConsole('info', `运行安装包: ${installerPath}，平台: ${platform}`);
     try {
       await runInstallerByPlatform(installerPath);
-      await new Promise(r => setTimeout(r, 9000));
+      await this.isOadinAvailable(4, 3000);
       logAndConsole('info', '安装包运行成功');
       return true;
     } catch (err) {
@@ -1074,7 +1074,7 @@ class Oadin {
         }
         const installResult = await runInstallerByPlatform(dest);
         logAndConsole('info', `isOadinExistedAndUpdate 安装结果: ${installResult}`);
-        await new Promise(r => setTimeout(r, 9000));
+        await this.isOadinAvailable(4, 3000);
         return true;
       } else {
         logAndConsole('error', 'isOadinExistedAndUpdate 三次下载均失败，放弃安装。');
