@@ -1,6 +1,7 @@
 const axios = require('axios');
 const Ajv = require('ajv');
 const addFormats = require('ajv-formats');
+const { logAndConsole } = require('./tools.js');
 
 /**
  * 创建带有拦截器的 axios 实例
@@ -88,9 +89,12 @@ async function requestWithSchema({ method, url, data, schema, instance }) {
         throw new Error(`Response schema validation failed: ${JSON.stringify(validateRes.errors)}`);
       }
     }
+    // 打印res和url以便调试
+    logAndConsole('info', `Request URL: ${url}, Response Data: ${JSON.stringify(res)}`);
     return { code: 200, msg: res.message || null, data: res.data || res };
   } catch (error) {
     let msg = error.message;
+    logAndConsole('info', `Request URL error: ${url}, Response Data: ${JSON.stringify(error)}`);
     if (error.response) {
       // 兼容后端返回的各种结构
       if (typeof error.response.data === 'string') {

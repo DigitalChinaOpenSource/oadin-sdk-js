@@ -9,7 +9,7 @@ const { execFile } = require('child_process');
 const { log } = require('console');
 
 async function isOadinAvailable(retries = 5, interval = 1000) {
-  logAndConsole('info', '检测Oadin服务可用性...');
+  logAndConsole('info', 'tools检测Oadin服务可用性...');
   const fibArr = fibonacci(retries, interval);
   for (let attempt = 0; attempt < retries; attempt++) {
     try {

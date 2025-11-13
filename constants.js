@@ -8,12 +8,12 @@ const MAC_OADIN_PATH = '/usr/local/bin/oadin';
 const MAC_OADIN_EXE = 'oadin';
 //TODO: 把下载域名拆开
 // TEST
-// const WIN_INSTALLER_URL = 'http://10.3.70.145:32018/repository/raw-hosted/intel-ai-pc/oadin/dist/win/oadin-installer-latest.exe';
-// const MAC_INSTALLER_URL = 'http://10.3.70.145:32018/repository/raw-hosted/intel-ai-pc/oadin/dist/mac/oadin-installer-latest.pkg'
-// const Get_Version_Url = 'https://api-aipc-test.dcclouds.com/api/ota/oadin/latest-version';
-const Get_Version_Url = 'https://lumina.dcclouds.com/api/ota/oadin/latest-version';
-const WIN_INSTALLER_URL = 'https://oss-aipc.dcclouds.com/oadin/dist/windows/oadin-installer-latest.exe';
-const MAC_INSTALLER_URL = 'https://oss-aipc.dcclouds.com/oadin/dist/macos/oadin-installer-latest.pkg';
+const WIN_INSTALLER_URL = 'http://10.3.70.145:32018/repository/raw-hosted/intel-ai-pc/oadin/dist/win/oadin-installer-latest.exe';
+const MAC_INSTALLER_URL = 'http://10.3.70.145:32018/repository/raw-hosted/intel-ai-pc/oadin/dist/mac/oadin-installer-latest.pkg'
+const Get_Version_Url = 'https://api-aipc-test.dcclouds.com/api/ota/oadin/latest-version';
+// const Get_Version_Url = 'https://lumina.dcclouds.com/api/ota/oadin/latest-version';
+// const WIN_INSTALLER_URL = 'https://oss-aipc.dcclouds.com/oadin/dist/windows/oadin-installer-latest.exe';
+// const MAC_INSTALLER_URL = 'https://oss-aipc.dcclouds.com/oadin/dist/macos/oadin-installer-latest.pkg';
 const WIN_INSTALLER_NAME = 'oadin-installer-latest.exe';
 const MAC_INSTALLER_NAME = 'oadin-installer-latest.pkg';
 const OADIN_INSTALLER_DIR = 'OadinInstaller';

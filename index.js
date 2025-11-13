@@ -46,7 +46,7 @@ class Oadin {
   }
 
   // 检查 Oadin 服务是否启动
-  async isOadinAvailable(retries = 3, interval = 3000) {
+  async isOadinAvailable(retries = 1, interval = 3000) {
     logAndConsole('info', '检测Oadin服务可用性...');
     const fibArr = tools.fibonacci(retries, interval);
     for (let attempt = 0; attempt < retries; attempt++) {
@@ -55,13 +55,16 @@ class Oadin {
         //   axios.get(OADIN_HEALTH),
         //   axios.get(OADIN_ENGINE_PATH)
         // ]);
+        logAndConsole('info', `第 ${attempt + 1} 次检测 Oadin 服务是否启动`);
         const healthRes = await axios.get(OADIN_HEALTH);
         const healthOk = isHealthy(healthRes.status);
         // const engineOk = isHealthy(engineHealthRes.status);
         // logAndConsole('info', `/health: ${healthOk ? '正常' : '异常'}, /engine/health: ${engineOk ? '正常' : '异常'}`);
         // if (healthOk && engineOk) return true;
         logAndConsole('info', `/health: ${healthOk ? '正常' : '异常'}`);
-        if (healthOk) return true;
+        if (healthOk) {
+          return true;
+        }
       } catch (err) {
         logAndConsole('warn', `健康检查失败: ${err.message}`);
       }
@@ -151,6 +154,7 @@ class Oadin {
     logAndConsole('info', `运行安装包: ${installerPath}，平台: ${platform}`);
     try {
       await runInstallerByPlatform(installerPath);
+      await new Promise(r => setTimeout(r, 9000));
       logAndConsole('info', '安装包运行成功');
       return true;
     } catch (err) {
@@ -204,7 +208,7 @@ class Oadin {
   // 启动 Oadin 服务
   async startOadin() {
     await this.ensureClient();
-    const alreadyRunning = await this.isOadinAvailable(3, 3000);
+    const alreadyRunning = await this.isOadinAvailable();
     if (alreadyRunning) {
       logAndConsole('info', '[startOadin] Oadin 在运行中');
       return true;
@@ -1062,7 +1066,7 @@ class Oadin {
       if (downloadOk) {
         if (platform === 'darwin') {
           // 奥丁MAC的post脚本无法关闭旧版本服务，只能在sdk去驱动关闭
-          const alreadyRunning = await this.isOadinAvailable(3, 3000);
+          const alreadyRunning = await this.isOadinAvailable();
           if (alreadyRunning) {
             this.stopOadin();
             await new Promise(r => setTimeout(r, 3000)); // 等待3秒关闭
@@ -1070,6 +1074,7 @@ class Oadin {
         }
         const installResult = await runInstallerByPlatform(dest);
         logAndConsole('info', `isOadinExistedAndUpdate 安装结果: ${installResult}`);
+        await new Promise(r => setTimeout(r, 9000));
         return true;
       } else {
         logAndConsole('error', 'isOadinExistedAndUpdate 三次下载均失败，放弃安装。');
