@@ -186,6 +186,9 @@ class Oadin {
       if (this.downloadConfig && this.downloadConfig.version !== 'xxxxx') {
         targetSubVersion = this.downloadConfig.version;
       }
+      if (targetSubVersion === 'latest') {
+        targetSubVersion = await getOadinLatestVersion();
+      }
       const downloadUrlReplaced = downloadUrl.replace('latest', targetSubVersion);
       logAndConsole('info', `downloadOadin url: ${downloadUrlReplaced}`);
       const downloadOk = await this._downloadFile(downloadUrlReplaced, dest, options, retries);
