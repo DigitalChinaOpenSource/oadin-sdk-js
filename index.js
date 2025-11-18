@@ -187,7 +187,11 @@ class Oadin {
         targetSubVersion = this.downloadConfig.version;
       }
       if (targetSubVersion === 'latest') {
-        targetSubVersion = await getOadinLatestVersion();
+        // 获取最新的版本号
+        const latestVersion = await getOadinLatestVersion();
+        if (latestVersion) {
+          targetSubVersion = latestVersion;
+        }
       }
       const downloadUrlReplaced = downloadUrl.replace('latest', targetSubVersion);
       logAndConsole('info', `downloadOadin url: ${downloadUrlReplaced}`);
