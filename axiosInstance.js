@@ -94,7 +94,7 @@ async function requestWithSchema({ method, url, data, schema, instance }) {
     return { code: 200, msg: res.message || null, data: res.data || res };
   } catch (error) {
     let msg = error.message;
-    logAndConsole('info', `Request URL error: ${url}, Response Data: ${JSON.stringify(error)}`);
+    // logAndConsole('info', `Request URL error: ${url}, Response Data: ${JSON.stringify(error)}`);
     if (error.response) {
       // 兼容后端返回的各种结构
       if (typeof error.response.data === 'string') {
