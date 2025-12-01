@@ -998,6 +998,8 @@ class Oadin {
       const latestVersion = await getOadinLatestVersion();
       if (latestVersion) {
         targetSubVersion = latestVersion;
+      } else {
+        return true; // 无法获取最新版本，跳过更新
       }
     }
     let currentSubVersion = null;
