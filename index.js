@@ -804,7 +804,7 @@ class Oadin {
           const response = JSON.parse(jsonString);
           eventEmitter.emit('data', response);
         } catch (err) {
-          eventEmitter.emit('error', `解析流数据失败: ${err.message}`);
+          eventEmitter.emit('error', `解析流数据失败: ${err.message}, 数据: ${chunk.toString()}`);
         }
       });
       res.data.on('error', (err) => {
@@ -923,6 +923,66 @@ class Oadin {
       return false;
     }
   }
+
+  // 流式下载嵌入模型
+  async DownloadModelEmbedStream() {
+    if (!this.downloadConfig) {
+      logAndConsole('error', '下载配置未加载');
+      return null;
+    }
+    try {
+      let index = 0;
+      if (this.downloadConfig.Memory > 16 && this.downloadConfig.Memory <= 32) {
+        index = 1;
+      }
+      if (this.downloadConfig.Memory > 32) {
+        index = 2;
+      }
+      const res = await this.downloadModelStream({
+        engineName: this.downloadConfig.embed[index].api_flavor,
+        modelName: this.downloadConfig.embed[index].name,
+        modelType: "embed",
+        stream: true,
+      });
+      if (res.code === 400) {
+        return null
+      }
+      return res
+    } catch (error) {
+      logAndConsole('error', '下载embed模型失败: ' + error.message);
+      return null;
+    }
+  }
+
+  // 流式下载chat模型
+  async DownloadModelChatStream() {
+    if (!this.downloadConfig) {
+      logAndConsole('error', '下载配置未加载');
+      return null;
+    }
+    try {
+      let index = 0;
+      if (this.downloadConfig.Memory > 16 && this.downloadConfig.Memory <= 32) {
+        index = 1;
+      }
+      if (this.downloadConfig.Memory > 32) {
+        index = 2;
+      }
+      const res = await this.downloadModelStream({
+        engineName: this.downloadConfig.chat[index].api_flavor,
+        modelName: this.downloadConfig.chat[index].name,
+        modelType: "chat",
+        stream: true,
+      });
+      if (res.code === 400) {
+        return null
+      }
+      return res
+    } catch (error) {
+      logAndConsole('error', '下载模型chat失败: ' + error.message);
+      return null;
+    }
+  }  
 
   // 全检查 奥丁/引擎/模型
   async DownloadCheckDist() {
