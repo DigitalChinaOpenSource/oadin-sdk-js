@@ -1154,6 +1154,37 @@ class Oadin {
       return false;
     }
   }
+
+  // 检查指定类型的模型是否存在 embed/chat
+  async isModelExisted(modelType) {
+    if (!this.downloadConfig) {
+      logAndConsole('error', 'DownloadCheckDist 下载配置未加载');
+      return false;
+    }
+    if (modelType !== 'embed' && modelType !== 'chat') {
+      logAndConsole('error', 'isModelExisted 不支持的模型类型: ' + modelType);
+      return false;
+    }
+    try {
+      let result = true;
+      for (const engine of this.downloadConfig.support_engines) {
+        const res = await this._requestWithSchema({ method: 'post', url: 'engine/download/checkModel', data: { engineName: engine, modelType: modelType} });
+        if (res.code !== 200) {
+          result = false;
+          break;
+        }
+        if (res.data.status !== "success") {
+          result = false;
+          break;
+        }
+      }
+      logAndConsole('info', 'isModelExisted: ' + modelType + ": " + result);
+      return result;
+    } catch (error) {
+      logAndConsole('error', 'isModelExisted: ' + modelType + ": " + error.message);
+      return false;
+    }       
+  }
 }
 
 module.exports = Oadin;
