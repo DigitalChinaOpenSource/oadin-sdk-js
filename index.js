@@ -804,7 +804,9 @@ class Oadin {
           const response = JSON.parse(jsonString);
           eventEmitter.emit('data', response);
         } catch (err) {
-          eventEmitter.emit('error', `解析流数据失败: ${err.message}, 数据: ${chunk.toString()}`);
+          // 只报告该片段的解析错误，不阻塞后续片段处理
+          logAndConsole('warn', `解析流数据失败: ${err.message}, 数据: ${chunk.toString()}`);
+          // eventEmitter.emit('error', `解析流数据失败: ${err.message}, 数据: ${chunk.toString()}`);
         }
       });
       res.data.on('error', (err) => {
